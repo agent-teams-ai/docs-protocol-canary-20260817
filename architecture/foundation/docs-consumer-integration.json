@@ -16,15 +16,16 @@
   ],
   "cohort": {
     "schemaVersion": 1,
-    "cohortId": "docs-2026-08-17-rc6",
+    "cohortId": "docs-2026-08-17-rc7",
     "channel": "rc",
-    "recordDigest": "sha256:d18d02bc017715b5bd6a39eec8aa091c596ac271b877f7c88146000cc0d04662",
-    "qualificationEventDigest": "sha256:e1b92d42d2aea27d52add45b28789c549b19f4c0a8387e758dddf01e4b59bb18",
+    "recordDigest": "sha256:55afadf793fb62703934082c2fe682a6f678ef92ad8cd2f58d1d2d80e007c836",
+    "qualificationEventDigest": "sha256:d24c95a0d708ec9f72340181b4cb830560ad3f44429f8df8eb65032549c57d2e",
     "eligibleAfter": "2026-08-18T13:25:26Z",
     "upgradeFrom": [
       "docs-2026-08-17-rc1",
       "docs-2026-08-17-rc4",
-      "docs-2026-08-17-rc5"
+      "docs-2026-08-17-rc5",
+      "docs-2026-08-17-rc6"
     ],
     "rollbackTo": [
       "docs-2026-08-17-rc1"
@@ -42,12 +43,12 @@
     "workflow": {
       "repository": "agent-teams-ai/.github",
       "path": ".github/workflows/docs-protocol-check.yml",
-      "revision": "43b219c287f997b8c7b7bd9c9023282adae134f9",
-      "blobSha": "4f4ea1b662bdadcbbeefb1b817a972f7b35f0ecd"
+      "revision": "57e03681e820fd0378600b5169acfa1514d1065a",
+      "blobSha": "d452902e36bb144f9cb2816ced77cdd8ae629cd9"
     },
     "assets": {
       "skillDigest": "sha256:7b31cd257532247f64c55a014dc926c601e4d742176cfb8513b6b0d8ab48213e",
-      "callerWorkflowDigest": "sha256:ef85710b48cb2d7217f2bff58ef8dbf634cf3fdea43ce0ad4dd743333d262599",
+      "callerWorkflowDigest": "sha256:3e53262efc8a530b532380dac21d876456473d3b88aba20889a1d24823bf3a1b",
       "assetCatalogDigest": "sha256:b156dba1b2b88aa53bd9196dd49e93c0a153f6fb155ed2ce89c5dc1a0bf8eeb6",
       "transitionCatalogDigest": "sha256:dcc2d636629237eab4918fb513f538a538b6ac3672a928bdffe866cf4fec9a7f"
     },
