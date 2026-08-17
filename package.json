@@ -11,8 +11,16 @@
     "pnpm": ">=11.17.0 <12"
   },
   "devDependencies": {
-    "@agent-teams/docs-protocol": "0.1.0-rc.2",
-    "@agent-teams/engineering-foundation": "0.17.0-rc.1"
+    "@agent-teams/docs-protocol": "0.1.0-rc.5",
+    "@agent-teams/engineering-foundation": "0.17.0-rc.3"
+  },
+  "scripts": {
+    "docs:check": "agent-teams-docs check --consumer . --profile architecture/foundation/docs-protocol.yaml",
+    "docs:doctor": "agent-teams-docs doctor --consumer . --profile architecture/foundation/docs-protocol.yaml",
+    "docs:find": "agent-teams-docs find --consumer . --profile architecture/foundation/docs-protocol.yaml",
+    "docs:info": "agent-teams-docs info --consumer . --profile architecture/foundation/docs-protocol.yaml",
+    "docs:new": "agent-teams-docs new --consumer . --profile architecture/foundation/docs-protocol.yaml",
+    "docs:protocol:check": "pnpm docs:check",
+    "docs:recover": "agent-teams-docs recover --consumer . --profile architecture/foundation/docs-protocol.yaml"
   }
 }
-
