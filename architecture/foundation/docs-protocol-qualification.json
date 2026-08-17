@@ -4,8 +4,8 @@
   "protocolVersion": 1,
   "consumer": "agent-teams-ai/docs-protocol-canary-20260817",
   "packages": {
-    "@agent-teams/docs-protocol": "0.1.0-rc.5",
-    "@agent-teams/engineering-foundation": "0.17.0-rc.3"
+    "@agent-teams/docs-protocol": "0.1.0-rc.9",
+    "@agent-teams/engineering-foundation": "0.17.0-rc.6"
   },
   "profilePath": "architecture/foundation/docs-protocol.yaml",
   "callerWorkflowPath": ".github/workflows/docs-protocol.yml",

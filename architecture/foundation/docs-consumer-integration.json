@@ -16,28 +16,30 @@
   ],
   "cohort": {
     "schemaVersion": 1,
-    "cohortId": "docs-2026-08-17-rc7",
+    "cohortId": "docs-2026-08-17-rc9",
     "channel": "rc",
-    "recordDigest": "sha256:55afadf793fb62703934082c2fe682a6f678ef92ad8cd2f58d1d2d80e007c836",
-    "qualificationEventDigest": "sha256:d24c95a0d708ec9f72340181b4cb830560ad3f44429f8df8eb65032549c57d2e",
-    "eligibleAfter": "2026-08-18T13:25:26Z",
+    "recordDigest": "sha256:01d4017999598091c3536e4f5977847ff18a52a235de149516251e595f9722d3",
+    "qualificationEventDigest": "sha256:a7e7434cf91808ab77d0529c1268011f70d824b15fe4b9ecf0dcc28c5f264912",
+    "eligibleAfter": "2026-08-18T19:03:38Z",
     "upgradeFrom": [
       "docs-2026-08-17-rc1",
       "docs-2026-08-17-rc4",
       "docs-2026-08-17-rc5",
-      "docs-2026-08-17-rc6"
+      "docs-2026-08-17-rc6",
+      "docs-2026-08-17-rc7",
+      "docs-2026-08-17-rc8"
     ],
     "rollbackTo": [
       "docs-2026-08-17-rc1"
     ],
     "packages": {
       "docsProtocol": {
-        "version": "0.1.0-rc.5",
-        "integrity": "sha512-ZsbaS07YSr0udgsvFekeuc86ILn+oQ63ikuF+q5nib+1Rk+UR9to4gpeZAYQvu57Axoxi9TjZ+olE6162e1Fkg=="
+        "version": "0.1.0-rc.9",
+        "integrity": "sha512-JB4cQPqpXrmVdmiycHjHbklfQBux1wYNBo+HXFRDdLxUnjJlULe1HXjNYRf93WXfhjbV6lgN+sHRy4v1EeBEYA=="
       },
       "engineeringFoundation": {
-        "version": "0.17.0-rc.3",
-        "integrity": "sha512-czq6garXWUbObaqeUmgGMs3LZRKgEdOiYyMtvcnXNXI4cMjBDhwlTmW+DfQ3h5WXHo7dqzPloQvr9pjzvQhSFA=="
+        "version": "0.17.0-rc.6",
+        "integrity": "sha512-uhmo9waigNcHQ5jkIGQgnGK4JDah0C8er6RKTNPUURpOUOvNM6maoEyBWp5rCy1ravzzSW3QXuNaZmCujppgGQ=="
       }
     },
     "workflow": {
@@ -50,7 +52,7 @@
       "skillDigest": "sha256:7b31cd257532247f64c55a014dc926c601e4d742176cfb8513b6b0d8ab48213e",
       "callerWorkflowDigest": "sha256:3e53262efc8a530b532380dac21d876456473d3b88aba20889a1d24823bf3a1b",
       "assetCatalogDigest": "sha256:b156dba1b2b88aa53bd9196dd49e93c0a153f6fb155ed2ce89c5dc1a0bf8eeb6",
-      "transitionCatalogDigest": "sha256:dcc2d636629237eab4918fb513f538a538b6ac3672a928bdffe866cf4fec9a7f"
+      "transitionCatalogDigest": "sha256:58546ba52fdb8a3293d4e1db003557208a859b149336f56c16bc8fc9061c7192"
     },
     "schemas": {
       "consumerIntegration": 1,
@@ -60,7 +62,7 @@
     "runtime": {
       "node": ">=24.18.0 <25",
       "pnpm": ">=11.17.0 <12",
-      "runtimeClosureDigest": "sha256:318ecaf7f78162e77794fa0eb02ac452823cfd47fce913434025698171afee81"
+      "runtimeClosureDigest": "sha256:da419d5445a4537e282d8585af537edb1d63075e8bda75f5d1419d3e5bc0dd64"
     }
   }
 }
