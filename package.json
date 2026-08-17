@@ -1,0 +1,18 @@
+{
+  "name": "@agent-teams/docs-protocol-canary",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Disposable Managed Docs Protocol qualification canary.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "pnpm": ">=11.17.0 <12"
+  },
+  "devDependencies": {
+    "@agent-teams/docs-protocol": "0.1.0-rc.2",
+    "@agent-teams/engineering-foundation": "0.17.0-rc.1"
+  }
+}
+
