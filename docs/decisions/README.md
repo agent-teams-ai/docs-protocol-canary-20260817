@@ -8,3 +8,4 @@ summary: Index of canary decisions.
 
 # Decisions
 
+- [ADR-0001: Canary integration](generated/0001-canary-integration.md)
