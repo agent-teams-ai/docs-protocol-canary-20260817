@@ -8,3 +8,4 @@ summary: Index of canary decisions.
 
 # Decisions
 
+- [ADR-0001: Managed Docs Protocol canary qualification](generated/0001-managed-docs-protocol-canary-qualification.md)
