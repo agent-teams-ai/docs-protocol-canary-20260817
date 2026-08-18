@@ -9,21 +9,21 @@ importers:
   .:
     devDependencies:
       '@agent-teams/docs-protocol':
-        specifier: 0.1.0-rc.9
-        version: 0.1.0-rc.9(supports-color@8.1.1)
+        specifier: 0.1.0-rc.10
+        version: 0.1.0-rc.10(supports-color@8.1.1)
       '@agent-teams/engineering-foundation':
-        specifier: 0.17.0-rc.6
-        version: 0.17.0-rc.6(supports-color@8.1.1)
+        specifier: 0.17.0-rc.7
+        version: 0.17.0-rc.7(supports-color@8.1.1)
 
 packages:
 
-  '@agent-teams/docs-protocol@0.1.0-rc.9':
-    resolution: {integrity: sha512-JB4cQPqpXrmVdmiycHjHbklfQBux1wYNBo+HXFRDdLxUnjJlULe1HXjNYRf93WXfhjbV6lgN+sHRy4v1EeBEYA==}
+  '@agent-teams/docs-protocol@0.1.0-rc.10':
+    resolution: {integrity: sha512-5s7lzL4mesiaxfb+IaI6A2BOuZxPDORIr5O2yFZTQXVXpBR1N45wxyAtS4f/0WBUmAwKnf+NgE9ln1GuMWV7PA==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
     hasBin: true
 
-  '@agent-teams/engineering-foundation@0.17.0-rc.6':
-    resolution: {integrity: sha512-uhmo9waigNcHQ5jkIGQgnGK4JDah0C8er6RKTNPUURpOUOvNM6maoEyBWp5rCy1ravzzSW3QXuNaZmCujppgGQ==}
+  '@agent-teams/engineering-foundation@0.17.0-rc.7':
+    resolution: {integrity: sha512-Z2kPryDLikB5rmcQOzTQSA6JboU2Hn2ZBotI8PIN0mYZ2HuADunowY6GBgSQ1o7Xb1EIrWNq4i7HEkbhOE1XMw==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
     hasBin: true
 
@@ -612,9 +612,9 @@ packages:
 
 snapshots:
 
-  '@agent-teams/docs-protocol@0.1.0-rc.9(supports-color@8.1.1)':
+  '@agent-teams/docs-protocol@0.1.0-rc.10(supports-color@8.1.1)':
     dependencies:
-      '@agent-teams/engineering-foundation': 0.17.0-rc.6(supports-color@8.1.1)
+      '@agent-teams/engineering-foundation': 0.17.0-rc.7(supports-color@8.1.1)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       jsonc-parser: 3.3.1
@@ -623,7 +623,7 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@agent-teams/engineering-foundation@0.17.0-rc.6(supports-color@8.1.1)':
+  '@agent-teams/engineering-foundation@0.17.0-rc.7(supports-color@8.1.1)':
     dependencies:
       '@microsoft/api-extractor': 7.58.12
       '@microsoft/api-extractor-model': 7.33.10
