@@ -11,4 +11,4 @@ permissions:
 
 jobs:
   docs-protocol:
-    uses: agent-teams-ai/.github/.github/workflows/docs-protocol-check.yml@66f14ef062656f9c2d10cc211f814e8a7c864b25
+    uses: agent-teams-ai/.github/.github/workflows/docs-protocol-check.yml@2375b0451a54b4889addef676b4788e14ad914c5

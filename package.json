@@ -11,8 +11,8 @@
     "pnpm": ">=11.17.0 <12"
   },
   "devDependencies": {
-    "@agent-teams/docs-protocol": "0.1.0-rc.10",
-    "@agent-teams/engineering-foundation": "0.17.0-rc.7"
+    "@agent-teams/docs-protocol": "0.1.0-rc.12",
+    "@agent-teams/engineering-foundation": "0.17.0-rc.8"
   },
   "scripts": {
     "docs:check": "agent-teams-docs check --consumer . --profile architecture/foundation/docs-protocol.yaml",
