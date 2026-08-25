@@ -16,24 +16,23 @@
   ],
   "cohort": {
     "schemaVersion": 1,
-    "cohortId": "docs-2026-08-24-stable2",
+    "cohortId": "docs-2026-08-25-stable3",
     "channel": "stable",
-    "recordDigest": "sha256:b37736f98967b8727d9f1466f165bb8a6345ec8f4677462cd19a2247372ae003",
-    "qualificationEventDigest": "sha256:be018ba57362a06d796386707ab75da7d670c2107c0dc1e582ffe75914cff6bf",
-    "eligibleAfter": "2026-08-25T15:43:15Z",
+    "recordDigest": "sha256:6967adc19c521f085c2772178d170218ac4327d058f120374a87b5ba2f6b8ca5",
+    "qualificationEventDigest": "sha256:c8879b257ceda0a53e9243e1a69c0baa5aa64ce8c5ee1c9929d659e5e3366a6f",
+    "eligibleAfter": "2026-08-26T22:05:43Z",
     "upgradeFrom": [
-      "docs-2026-08-18-rc2",
-      "docs-2026-08-23-stable1"
+      "docs-2026-08-24-stable2"
     ],
     "rollbackTo": [],
     "packages": {
       "docsProtocol": {
-        "version": "0.1.2",
-        "integrity": "sha512-gSC7j0AsSwriQRQ0sVKNZjrjU7qQArAsWfDwWUw9GoSsswEJlyjpuKbe6D7+ockc/m8esLWDz/G4B4qCASgFTg=="
+        "version": "0.1.4",
+        "integrity": "sha512-BIgZBbnKTkL38wULZ6alpJKeJ+nHU2gNBP9cnDOOCSpPV3E9fZLm2RRCF9VY8rpMn3WhRFHkwoVODknu8wr+bw=="
       },
       "engineeringFoundation": {
-        "version": "0.18.0",
-        "integrity": "sha512-n6coMdQHgTTzuUWNDqYO9S4jd4oYTu11lxKbG188Pdd4dFAYrDUtjPtL/ZtAkTgFb2jbDLvjqQkeKU70MTGoCg=="
+        "version": "0.19.0",
+        "integrity": "sha512-CeIWttZYT74jgwryA+326d21xNapep8NFQkxN9I+zAoyebEZk+apVvIndx3WC8NtJZYvzuKouEh1OB+vJPadxA=="
       }
     },
     "workflow": {
@@ -46,7 +45,7 @@
       "skillDigest": "sha256:7b31cd257532247f64c55a014dc926c601e4d742176cfb8513b6b0d8ab48213e",
       "callerWorkflowDigest": "sha256:d697c5c7c9bcfccfc006fcf7e4d4cc8e7c629f9689781b9b0b50f30d82bc019e",
       "assetCatalogDigest": "sha256:b156dba1b2b88aa53bd9196dd49e93c0a153f6fb155ed2ce89c5dc1a0bf8eeb6",
-      "transitionCatalogDigest": "sha256:dd76dbd4c196bff1440f3ce105ebb65656d1c59c04c7a983a6831d100e6e8bcc"
+      "transitionCatalogDigest": "sha256:08ca500ede528c424e8d4da21047c14e162ecc27b51ec6175d9bc5b479f6bd00"
     },
     "schemas": {
       "consumerIntegration": 1,
@@ -56,7 +55,7 @@
     "runtime": {
       "node": ">=24.18.0 <25",
       "pnpm": ">=11.17.0 <12",
-      "runtimeClosureDigest": "sha256:91df738a5e8b5910833b20fa8937b9b15c8c9fdb30df2ba14e4b643db2976f92"
+      "runtimeClosureDigest": "sha256:ec928825d7093ab3d1decf58c9e9cad02c0abebc6c083641c876f9ad63f698a2"
     }
   }
 }
