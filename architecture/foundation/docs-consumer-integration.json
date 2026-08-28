@@ -20,19 +20,19 @@
   },
   "cohort": {
     "schemaVersion": 1,
-    "cohortId": "docs-2026-08-28-stable8",
+    "cohortId": "docs-2026-08-28-stable9.1",
     "channel": "stable",
-    "recordDigest": "sha256:e1ad7395b51d7b912db2181d263104067c712fc0cd13bac91aa5dccbc2590cc4",
-    "qualificationEventDigest": "sha256:bc24797129f6fedd4d252f20deebf9762da1093ff7a5dea137c32cb52d12e471",
-    "eligibleAfter": "2026-08-28T23:40:55Z",
+    "recordDigest": "sha256:2d73696ad48a91b1fc3b52f49e00f44bc08a3df9f29abae3761f9ded94461ae3",
+    "qualificationEventDigest": "sha256:7d36cedcacf4483d958a3321132d4387ddb49477f137b12ebd94c77b963e4e3a",
+    "eligibleAfter": "2026-08-29T16:11:21Z",
     "upgradeFrom": [
-      "docs-2026-08-25-stable3"
+      "docs-2026-08-28-stable8"
     ],
     "rollbackTo": [],
     "packages": {
       "docsProtocol": {
-        "version": "0.2.0",
-        "integrity": "sha512-KtmILYJTQf91wU643UMRh5QuO2Jnbn5f/kBD6e3agUIWv0KpuxHqEyZZPLsp0jiTA1WV4TBJa4EyFDT0Ju1/KQ=="
+        "version": "0.3.2",
+        "integrity": "sha512-UbnF3tPTbHFRJf0sjagStO4ZpOB6FvxPr/1NunelS0vklulvFOeTv9XL5RKTxxkdAyPGCu+Swfmr8eVRf5wLKg=="
       },
       "engineeringFoundation": {
         "version": "0.20.0",
@@ -42,14 +42,14 @@
     "workflow": {
       "repository": "agent-teams-ai/.github",
       "path": ".github/workflows/docs-protocol-check.yml",
-      "revision": "07d49409cb51f6124ad17673860b812a9d7b5f5b",
+      "revision": "c72dac6ba10660ac9d7e1426759f80a585c39da5",
       "blobSha": "efb9327218d89b6959ee38fa09b0e68f1ce5fe22"
     },
     "assets": {
       "skillDigest": "sha256:641265ef9ecff59c16482fdae1bc8fc56002b5a4a1ee34b102438d0ca08a86a3",
-      "callerWorkflowDigest": "sha256:7907195753506e4b0f0e89eb3f6e495bacbd79e9b9913c9f60fc4a07dffb22e5",
+      "callerWorkflowDigest": "sha256:f8da49344c3b0e9f31235de2826b1b9b392afb84515ace6af4fb5fe580e3a714",
       "assetCatalogDigest": "sha256:74cdec4a7982588c53660e9b432fc12daa7adc7a930d147a5b0e46888e210f19",
-      "transitionCatalogDigest": "sha256:7f8df2679785c9495a73c99362987e5d2ae63e120f4bf76801b2ad72d3b66ed4"
+      "transitionCatalogDigest": "sha256:ffce6fbb813ccbdbba3ba1dca6b22219672fbcc8bd08a0f0aca37bf8bed38e21"
     },
     "schemas": {
       "consumerIntegration": 1,
@@ -59,7 +59,7 @@
     "runtime": {
       "node": ">=24.18.0 <25",
       "pnpm": ">=11.17.0 <12",
-      "runtimeClosureDigest": "sha256:ed129c55d58c16fd38978598c49ee1716af0f2db90d7242553d39078073cc620"
+      "runtimeClosureDigest": "sha256:05226c9b2b251553a677fe9bc5d3d5924fa2830f9cf8acc65da075c861245f1f"
     }
   }
 }

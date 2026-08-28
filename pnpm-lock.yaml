@@ -9,16 +9,16 @@ importers:
   .:
     devDependencies:
       '@agent-teams/docs-protocol':
-        specifier: 0.2.0
-        version: 0.2.0(supports-color@8.1.1)
+        specifier: 0.3.2
+        version: 0.3.2(supports-color@8.1.1)
       '@agent-teams/engineering-foundation':
         specifier: 0.20.0
         version: 0.20.0(supports-color@8.1.1)
 
 packages:
 
-  '@agent-teams/docs-protocol@0.2.0':
-    resolution: {integrity: sha512-KtmILYJTQf91wU643UMRh5QuO2Jnbn5f/kBD6e3agUIWv0KpuxHqEyZZPLsp0jiTA1WV4TBJa4EyFDT0Ju1/KQ==}
+  '@agent-teams/docs-protocol@0.3.2':
+    resolution: {integrity: sha512-UbnF3tPTbHFRJf0sjagStO4ZpOB6FvxPr/1NunelS0vklulvFOeTv9XL5RKTxxkdAyPGCu+Swfmr8eVRf5wLKg==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
     hasBin: true
 
@@ -612,7 +612,7 @@ packages:
 
 snapshots:
 
-  '@agent-teams/docs-protocol@0.2.0(supports-color@8.1.1)':
+  '@agent-teams/docs-protocol@0.3.2(supports-color@8.1.1)':
     dependencies:
       '@agent-teams/engineering-foundation': 0.20.0(supports-color@8.1.1)
       ajv: 8.20.0
