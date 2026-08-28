@@ -20,10 +20,10 @@
   },
   "cohort": {
     "schemaVersion": 1,
-    "cohortId": "docs-2026-08-28-stable6",
+    "cohortId": "docs-2026-08-28-stable8",
     "channel": "stable",
-    "recordDigest": "sha256:bc3685ddfed689ec003f14e334d590421cca468475b3084e75ccdc7eedde8fca",
-    "qualificationEventDigest": "sha256:aa6e08d46ba363c9a32de04378b5135712df748549ea47faa86c26da435ac3db",
+    "recordDigest": "sha256:e1ad7395b51d7b912db2181d263104067c712fc0cd13bac91aa5dccbc2590cc4",
+    "qualificationEventDigest": "sha256:bc24797129f6fedd4d252f20deebf9762da1093ff7a5dea137c32cb52d12e471",
     "eligibleAfter": "2026-08-28T23:40:55Z",
     "upgradeFrom": [
       "docs-2026-08-25-stable3"
@@ -42,12 +42,12 @@
     "workflow": {
       "repository": "agent-teams-ai/.github",
       "path": ".github/workflows/docs-protocol-check.yml",
-      "revision": "09d453c30c2d0ae8110234aae5f361e5226e9d3e",
-      "blobSha": "153bd51c35aa079389f292588b56a03a276db386"
+      "revision": "07d49409cb51f6124ad17673860b812a9d7b5f5b",
+      "blobSha": "efb9327218d89b6959ee38fa09b0e68f1ce5fe22"
     },
     "assets": {
       "skillDigest": "sha256:641265ef9ecff59c16482fdae1bc8fc56002b5a4a1ee34b102438d0ca08a86a3",
-      "callerWorkflowDigest": "sha256:2ed4850871d1df496e16b9cfbb333f9be4f4c7abdf463a6d2c0ae459487f3600",
+      "callerWorkflowDigest": "sha256:7907195753506e4b0f0e89eb3f6e495bacbd79e9b9913c9f60fc4a07dffb22e5",
       "assetCatalogDigest": "sha256:74cdec4a7982588c53660e9b432fc12daa7adc7a930d147a5b0e46888e210f19",
       "transitionCatalogDigest": "sha256:7f8df2679785c9495a73c99362987e5d2ae63e120f4bf76801b2ad72d3b66ed4"
     },
