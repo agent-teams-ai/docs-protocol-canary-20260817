@@ -1,15 +1,24 @@
 {
-  "schemaVersion": 1,
-  "protocolId": "agent-teams.docs-protocol",
-  "protocolVersion": 1,
-  "consumer": "agent-teams-ai/docs-protocol-canary-20260817",
-  "packages": {
-    "@agent-teams/docs-protocol": "0.1.4",
-    "@agent-teams/engineering-foundation": "0.19.0"
-  },
-  "profilePath": "architecture/foundation/docs-protocol.yaml",
-  "callerWorkflowPath": ".github/workflows/docs-protocol.yml",
-  "skillPath": ".agents/skills/docs-authoring/SKILL.md",
-  "gateCommand": "pnpm docs:protocol:check",
-  "qualificationTests": []
+  "schemaVersion": 2,
+  "scenarios": [
+    {
+      "id": "stable4-adr",
+      "type": "adr",
+      "intent": {
+        "id": "ADR-9999",
+        "title": "Stable4 qualification decision",
+        "owner": "architecture/tooling",
+        "summary": "Proves the stable4 documentation contract in an owned disposable copy."
+      },
+      "expected": {
+        "documentPath": "docs/decisions/generated/9999-stable4-qualification-decision.md",
+        "metadataStorage": "frontmatter",
+        "reachability": {
+          "state": "manual-required",
+          "indexPath": "docs/decisions/README.md",
+          "markdownLink": "[ADR-9999: Stable4 qualification decision](generated/9999-stable4-qualification-decision.md)"
+        }
+      }
+    }
+  ]
 }
