@@ -1,0 +1,2 @@
+This disposable canary commit proves that central admission evidence remains valid
+after an unrelated default-branch advancement with a green Docs Protocol gate.
