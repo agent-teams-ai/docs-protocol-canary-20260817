@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": {
     "provider": "github",
     "id": "1336577313",
@@ -14,38 +14,42 @@
   "governedDocsRoots": [
     "docs"
   ],
+  "qualification": {
+    "contractPath": "architecture/foundation/docs-protocol-qualification.json",
+    "gateCommand": "pnpm docs:protocol:check"
+  },
   "cohort": {
     "schemaVersion": 1,
-    "cohortId": "docs-2026-08-25-stable3",
+    "cohortId": "docs-2026-08-28-stable6",
     "channel": "stable",
-    "recordDigest": "sha256:6967adc19c521f085c2772178d170218ac4327d058f120374a87b5ba2f6b8ca5",
-    "qualificationEventDigest": "sha256:c8879b257ceda0a53e9243e1a69c0baa5aa64ce8c5ee1c9929d659e5e3366a6f",
-    "eligibleAfter": "2026-08-26T22:05:43Z",
+    "recordDigest": "sha256:bc3685ddfed689ec003f14e334d590421cca468475b3084e75ccdc7eedde8fca",
+    "qualificationEventDigest": "sha256:aa6e08d46ba363c9a32de04378b5135712df748549ea47faa86c26da435ac3db",
+    "eligibleAfter": "2026-08-28T23:40:55Z",
     "upgradeFrom": [
-      "docs-2026-08-24-stable2"
+      "docs-2026-08-25-stable3"
     ],
     "rollbackTo": [],
     "packages": {
       "docsProtocol": {
-        "version": "0.1.4",
-        "integrity": "sha512-BIgZBbnKTkL38wULZ6alpJKeJ+nHU2gNBP9cnDOOCSpPV3E9fZLm2RRCF9VY8rpMn3WhRFHkwoVODknu8wr+bw=="
+        "version": "0.2.0",
+        "integrity": "sha512-KtmILYJTQf91wU643UMRh5QuO2Jnbn5f/kBD6e3agUIWv0KpuxHqEyZZPLsp0jiTA1WV4TBJa4EyFDT0Ju1/KQ=="
       },
       "engineeringFoundation": {
-        "version": "0.19.0",
-        "integrity": "sha512-CeIWttZYT74jgwryA+326d21xNapep8NFQkxN9I+zAoyebEZk+apVvIndx3WC8NtJZYvzuKouEh1OB+vJPadxA=="
+        "version": "0.20.0",
+        "integrity": "sha512-YGyNyfpxyElMUALIho+pi+xM9XHXWWEV5hBBEzcysaCO1Dgz5/3GuUjQ6fQM2sCjfPo7Pd6OoFJOSKiHaqe5ZA=="
       }
     },
     "workflow": {
       "repository": "agent-teams-ai/.github",
       "path": ".github/workflows/docs-protocol-check.yml",
-      "revision": "fdfedb5f76bc74a5bec37bf3afca2290658311ae",
-      "blobSha": "d452902e36bb144f9cb2816ced77cdd8ae629cd9"
+      "revision": "09d453c30c2d0ae8110234aae5f361e5226e9d3e",
+      "blobSha": "153bd51c35aa079389f292588b56a03a276db386"
     },
     "assets": {
-      "skillDigest": "sha256:7b31cd257532247f64c55a014dc926c601e4d742176cfb8513b6b0d8ab48213e",
-      "callerWorkflowDigest": "sha256:d697c5c7c9bcfccfc006fcf7e4d4cc8e7c629f9689781b9b0b50f30d82bc019e",
-      "assetCatalogDigest": "sha256:b156dba1b2b88aa53bd9196dd49e93c0a153f6fb155ed2ce89c5dc1a0bf8eeb6",
-      "transitionCatalogDigest": "sha256:08ca500ede528c424e8d4da21047c14e162ecc27b51ec6175d9bc5b479f6bd00"
+      "skillDigest": "sha256:641265ef9ecff59c16482fdae1bc8fc56002b5a4a1ee34b102438d0ca08a86a3",
+      "callerWorkflowDigest": "sha256:2ed4850871d1df496e16b9cfbb333f9be4f4c7abdf463a6d2c0ae459487f3600",
+      "assetCatalogDigest": "sha256:74cdec4a7982588c53660e9b432fc12daa7adc7a930d147a5b0e46888e210f19",
+      "transitionCatalogDigest": "sha256:7f8df2679785c9495a73c99362987e5d2ae63e120f4bf76801b2ad72d3b66ed4"
     },
     "schemas": {
       "consumerIntegration": 1,
@@ -55,7 +59,7 @@
     "runtime": {
       "node": ">=24.18.0 <25",
       "pnpm": ">=11.17.0 <12",
-      "runtimeClosureDigest": "sha256:ec928825d7093ab3d1decf58c9e9cad02c0abebc6c083641c876f9ad63f698a2"
+      "runtimeClosureDigest": "sha256:ed129c55d58c16fd38978598c49ee1716af0f2db90d7242553d39078073cc620"
     }
   }
 }

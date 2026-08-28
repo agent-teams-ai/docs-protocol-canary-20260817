@@ -9,21 +9,21 @@ importers:
   .:
     devDependencies:
       '@agent-teams/docs-protocol':
-        specifier: 0.1.4
-        version: 0.1.4(supports-color@8.1.1)
+        specifier: 0.2.0
+        version: 0.2.0(supports-color@8.1.1)
       '@agent-teams/engineering-foundation':
-        specifier: 0.19.0
-        version: 0.19.0(supports-color@8.1.1)
+        specifier: 0.20.0
+        version: 0.20.0(supports-color@8.1.1)
 
 packages:
 
-  '@agent-teams/docs-protocol@0.1.4':
-    resolution: {integrity: sha512-BIgZBbnKTkL38wULZ6alpJKeJ+nHU2gNBP9cnDOOCSpPV3E9fZLm2RRCF9VY8rpMn3WhRFHkwoVODknu8wr+bw==}
+  '@agent-teams/docs-protocol@0.2.0':
+    resolution: {integrity: sha512-KtmILYJTQf91wU643UMRh5QuO2Jnbn5f/kBD6e3agUIWv0KpuxHqEyZZPLsp0jiTA1WV4TBJa4EyFDT0Ju1/KQ==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
     hasBin: true
 
-  '@agent-teams/engineering-foundation@0.19.0':
-    resolution: {integrity: sha512-CeIWttZYT74jgwryA+326d21xNapep8NFQkxN9I+zAoyebEZk+apVvIndx3WC8NtJZYvzuKouEh1OB+vJPadxA==}
+  '@agent-teams/engineering-foundation@0.20.0':
+    resolution: {integrity: sha512-YGyNyfpxyElMUALIho+pi+xM9XHXWWEV5hBBEzcysaCO1Dgz5/3GuUjQ6fQM2sCjfPo7Pd6OoFJOSKiHaqe5ZA==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
     hasBin: true
 
@@ -612,9 +612,9 @@ packages:
 
 snapshots:
 
-  '@agent-teams/docs-protocol@0.1.4(supports-color@8.1.1)':
+  '@agent-teams/docs-protocol@0.2.0(supports-color@8.1.1)':
     dependencies:
-      '@agent-teams/engineering-foundation': 0.19.0(supports-color@8.1.1)
+      '@agent-teams/engineering-foundation': 0.20.0(supports-color@8.1.1)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       jsonc-parser: 3.3.1
@@ -623,7 +623,7 @@ snapshots:
       - '@types/node'
       - supports-color
 
-  '@agent-teams/engineering-foundation@0.19.0(supports-color@8.1.1)':
+  '@agent-teams/engineering-foundation@0.20.0(supports-color@8.1.1)':
     dependencies:
       '@microsoft/api-extractor': 7.58.12
       '@microsoft/api-extractor-model': 7.33.10
