@@ -1,0 +1,5 @@
+schemaVersion: 1
+project: {id: docs-protocol-canary}
+capabilities:
+  documentation.local-references:
+    configPath: architecture/foundation/local-references.yaml

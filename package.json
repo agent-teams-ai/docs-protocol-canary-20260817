@@ -21,7 +21,16 @@
     "docs:find": "agent-teams-docs find --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:info": "agent-teams-docs info --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:new": "agent-teams-docs new --consumer . --profile architecture/foundation/docs-protocol.yaml",
-    "docs:protocol:check": "pnpm docs:check",
-    "docs:recover": "agent-teams-docs recover --consumer . --profile architecture/foundation/docs-protocol.yaml"
+    "docs:protocol:check": "pnpm docs:check && pnpm test:migration",
+    "docs:recover": "agent-teams-docs recover --consumer . --profile architecture/foundation/docs-protocol.yaml",
+    "test:migration": "node --test tests/migration.test.mjs",
+    "foundation:check": "agent-teams-foundation check",
+    "foundation:status": "agent-teams-foundation status",
+    "foundation:attach": "agent-teams-foundation attach",
+    "foundation:detach": "agent-teams-foundation detach",
+    "foundation:assert-dev-only": "agent-teams-foundation assert-dev-only",
+    "foundation:assert-registry": "agent-teams-foundation assert-registry",
+    "test:foundation-gates": "node --test tests/foundation-gates.test.mjs",
+    "check": "pnpm foundation:assert-dev-only && pnpm foundation:assert-registry && pnpm foundation:check && pnpm test:foundation-gates && pnpm docs:protocol:check"
   }
 }
