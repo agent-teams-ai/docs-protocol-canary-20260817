@@ -12,16 +12,16 @@ importers:
         specifier: 0.6.0
         version: 0.6.0
       '@agent-teams/docs-protocol-agent-teams':
-        specifier: 0.2.3
-        version: 0.2.3
+        specifier: 0.2.5
+        version: 0.2.5
       '@agent-teams/engineering-foundation':
-        specifier: 1.1.1
-        version: 1.1.1
+        specifier: 1.2.0
+        version: 1.2.0
 
 packages:
 
-  '@agent-teams/docs-protocol-agent-teams@0.2.3':
-    resolution: {integrity: sha512-06faihpc/s86i/+leI+TmvVPCbVgEC30wSLfYvw4h360rbRNSLgY1pQEeY7W8+pQMi+LdYopt6fkBl0Z7ZGJrg==}
+  '@agent-teams/docs-protocol-agent-teams@0.2.5':
+    resolution: {integrity: sha512-ORSM0oJVIPD1MCT+pc2/LF5pNCKbhNqCcraXR9CdsZqPj09jfnBy58tCBm7sTHxpGA5gzE0fXktUQ5nrbRaE1Q==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
     hasBin: true
 
@@ -34,8 +34,8 @@ packages:
     resolution: {integrity: sha512-LdNT8VHPQxXvuyXsCblFSeCmbEEZcXwiCTY1E+c0ZEWWJG0V2qoi95F8fHAwI4ngZLDmLr/yzHGyDqwkd9GBrA==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
 
-  '@agent-teams/engineering-foundation@1.1.1':
-    resolution: {integrity: sha512-tBVsRkm92KN/Um1c2S+3N8DTEBU2Ki7VgfuZWJ/SEhyNwP24ElMQxlSOaV/TrClBsEnjVkDsbGQxLP8jRJqmEw==}
+  '@agent-teams/engineering-foundation@1.2.0':
+    resolution: {integrity: sha512-TBUH9TdTv3RepCbSt9RrIAAEnShYiUDxIotcbkbRkT0HjM+yAzBYNmBlC9qRfPqY3GPutDwTy0uZnPxEesi7vg==}
     engines: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}
     hasBin: true
 
@@ -399,7 +399,7 @@ packages:
 
 snapshots:
 
-  '@agent-teams/docs-protocol-agent-teams@0.2.3':
+  '@agent-teams/docs-protocol-agent-teams@0.2.5':
     dependencies:
       '@agent-teams/docs-protocol': 0.6.0
       '@agent-teams/repository-mutation': 0.2.0
@@ -422,7 +422,7 @@ snapshots:
       ajv: 8.20.0
       yaml: 2.9.0
 
-  '@agent-teams/engineering-foundation@1.1.1':
+  '@agent-teams/engineering-foundation@1.2.0':
     dependencies:
       '@agent-teams/document-authoring': 0.3.0
       '@agent-teams/repository-mutation': 0.2.0
