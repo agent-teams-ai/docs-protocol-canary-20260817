@@ -63,7 +63,7 @@ try {
   const rejected=installed('tamper',['apply','--expect','sha256:'+'0'.repeat(64)],true);
   assert.ok(rejected.issues.some(issue=>issue.code==='DOCS_CONSUMER_STALE_PLAN'));assert.deepEqual(await inventory(),before);
   assert.equal(installed('tamper-current',['check']).outcome,'current');
-  assert.equal(managed('upgrade',['upgrade','--to','docs-2026-09-10-stable19','--target-generation','2','--authority-revision',authority]).outcome,'upgraded');
+  assert.equal(installed('upgrade',['upgrade','--to','docs-2026-09-10-stable19','--target-generation','2','--authority-revision',authority]).outcome,'upgraded');
   const profile=JSON.parse(await readFile(join(consumer,'architecture/foundation/docs-consumer-integration.json')));
   assert.equal(profile.cohort.recordDigest,record);assert.equal(profile.cohort.runtime.runtimeClosureDigest,closure);
   assert.equal(managed('target-current',['check']).outcome,'current');
@@ -74,7 +74,7 @@ try {
   await writeFile(join(evidence,'target-lock.yaml'),await readFile(join(consumer,'pnpm-lock.yaml')));
   run('identity-name','git',['config','user.name','TEST lifecycle']);run('identity-email','git',['config','user.email','test@example.invalid']);
   run('stage','git',['add','--all']);run('checkpoint','git',['commit','-m','test: stable19 disposable checkpoint']);
-  assert.equal(managed('rollback',['upgrade','--to','docs-2026-09-10-stable18','--target-generation','2','--authority-revision',authority]).outcome,'upgraded');
+  assert.equal(installed('rollback',['upgrade','--to','docs-2026-09-10-stable18','--target-generation','2','--authority-revision',authority]).outcome,'upgraded');
   assert.equal(installed('rollback-current',['check']).outcome,'current');
   assert.deepEqual(await inventory(),before);
   await writeFile(join(evidence,'result.json'),JSON.stringify({outcome:'passed',source,authority,record,closure,patchDigest:hash(Buffer.from(patch+'\n')),rollbackExact:true,tamperRefused:true})+'\n');
