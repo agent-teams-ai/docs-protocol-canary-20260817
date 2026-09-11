@@ -6,6 +6,7 @@ import {join} from 'node:path';
 
 const repository = 'agent-teams-ai/docs-protocol-canary-20260817';
 const source = 'f25528ac4f19fd76b0fbbe6f2f5e90ae1b0f7633';
+const authority = '9173e8b37304b626d484526da54616bf6287be9f';
 const record = 'sha256:a2c8ac85c2f0afdaea498d5c994cb897ecabcbe6e97690dc3c5d416cd827b810';
 const closure = 'sha256:24d85c7f329deedf02dd3254090b56522a3dd23e22cdd51417a9ff3bee1a8589';
 const sri = 'sha512-YhgXKwsq2JlFisS+vaXBriDvbD+8wEQErMJqZCRaE4DEaZ+z+AWMgVYbpe4lTv2Zkexl4CCkVB74U3LqyUwegg==';
@@ -15,8 +16,6 @@ assert.equal(process.env.GITHUB_REPOSITORY, repository);
 assert.equal(process.env.GITHUB_REPOSITORY_ID, '1336577313');
 assert.match(process.env.GITHUB_RUN_ID, /^[1-9][0-9]*$/);
 assert.match(process.env.GITHUB_RUN_ATTEMPT, /^[1-9][0-9]*$/);
-const authority = execFileSync('gh', ['api', 'repos/agent-teams-ai/.github/branches/main', '--jq', '.commit.sha'], {encoding: 'utf8'}).trim();
-assert.match(authority, /^[0-9a-f]{40}$/);
 const root = join(process.env.RUNNER_TEMP, `TEST-stable20-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`);
 await mkdir(root);
 const evidence = join(root, 'evidence');
