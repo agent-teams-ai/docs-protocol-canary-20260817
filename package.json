@@ -13,7 +13,7 @@
   "devDependencies": {
     "@agent-teams/docs-protocol": "0.6.0",
     "@agent-teams/engineering-foundation": "1.2.0",
-    "@agent-teams/docs-protocol-agent-teams": "0.2.5"
+    "@agent-teams/docs-protocol-agent-teams": "0.2.7"
   },
   "scripts": {
     "docs:check": "agent-teams-docs check --consumer . --profile architecture/foundation/docs-protocol.yaml",

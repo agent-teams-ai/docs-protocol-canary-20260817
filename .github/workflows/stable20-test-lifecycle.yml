@@ -1,0 +1,33 @@
+name: TEST stable20 lifecycle
+on:
+  pull_request:
+    paths:
+      - scripts/stable20-test-lifecycle.mjs
+      - .github/workflows/stable20-test-lifecycle.yml
+permissions:
+  contents: read
+jobs:
+  lifecycle:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+      - run: npm install --global corepack@0.36.0 --ignore-scripts
+      - run: node scripts/stable20-test-lifecycle.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY_ID: '1336577313'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: stable20-test-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/TEST-stable20-${{ github.run_id }}-${{ github.run_attempt }}/evidence
+          retention-days: 14
+          if-no-files-found: error
