@@ -20,16 +20,16 @@
   },
   "cohort": {
     "schemaVersion": 2,
-    "cohortId": "docs-2026-09-10-stable19",
+    "cohortId": "docs-2026-09-11-stable20",
     "channel": "stable",
-    "recordDigest": "sha256:4dab45bfb69bc75ab63180f22e18ad036ed87107f11d2edd843c5f1f82b5f5bf",
-    "qualificationEventDigest": "sha256:30385945e581851788e955d406f4e7264c731f3a29a8b9cff4c3ecce1c3bd05a",
-    "eligibleAfter": "2026-09-10T11:36:07Z",
+    "recordDigest": "sha256:a2c8ac85c2f0afdaea498d5c994cb897ecabcbe6e97690dc3c5d416cd827b810",
+    "qualificationEventDigest": "sha256:94ef24e30cc5441fc99a7d8bbbd1952b07438a60642818d429062633a7277d95",
+    "eligibleAfter": "2026-09-11T04:09:06Z",
     "upgradeFrom": [
-      "docs-2026-09-10-stable18"
+      "docs-2026-09-10-stable19"
     ],
     "rollbackTo": [
-      "docs-2026-09-10-stable18"
+      "docs-2026-09-10-stable19"
     ],
     "packages": {
       "repositoryMutation": {
@@ -45,8 +45,8 @@
         "integrity": "sha512-xSlc0DFTGh0jed9581LoToHAXwxxZMhzlItbPeoc67YNBSDxLCP8XNwK0LCMs4w8MLqY6silJDtpzsHFw2XSVg=="
       },
       "docsProtocolAgentTeams": {
-        "version": "0.2.5",
-        "integrity": "sha512-ORSM0oJVIPD1MCT+pc2/LF5pNCKbhNqCcraXR9CdsZqPj09jfnBy58tCBm7sTHxpGA5gzE0fXktUQ5nrbRaE1Q=="
+        "version": "0.2.7",
+        "integrity": "sha512-YhgXKwsq2JlFisS+vaXBriDvbD+8wEQErMJqZCRaE4DEaZ+z+AWMgVYbpe4lTv2Zkexl4CCkVB74U3LqyUwegg=="
       },
       "engineeringFoundation": {
         "version": "1.2.0",
@@ -63,7 +63,7 @@
       "skillDigest": "sha256:a86d8c9b990124f11b50b1c6703e1aeb5e3b981d51f7e8f5c163c4f5b987d7c5",
       "callerWorkflowDigest": "sha256:d8d3b1281990179ee25ded67ba160f0e7573d2f70707b8c5b312d70b68d85125",
       "assetCatalogDigest": "sha256:3ec380a1a6dd8534824ba82ff23affba993e19e9cb6b3c5e424ea9973ad686da",
-      "transitionCatalogDigest": "sha256:699a59c6d14b45f2f0b9ee2bf5e4696b72200942642b0d9921af0855d472acf8"
+      "transitionCatalogDigest": "sha256:77ab3d28d39c6959ae3e5be2e9202b704dd9f57bbc9aed6824de81458c773de9"
     },
     "schemas": {
       "consumerIntegration": 3,
@@ -73,7 +73,7 @@
     "runtime": {
       "node": ">=24.18.0 <25",
       "pnpm": ">=11.17.0 <12",
-      "runtimeClosureDigest": "sha256:25f934b80126c6319c1f666bc76c072fab35afcc81bf42b40d2cdfb835ef24fc"
+      "runtimeClosureDigest": "sha256:24d85c7f329deedf02dd3254090b56522a3dd23e22cdd51417a9ff3bee1a8589"
     }
   }
 }
