@@ -20,7 +20,7 @@ jobs:
       pull-requests: read
       id-token: write
     env:
-      RR_RUNTIME_REF: "75cbecab131d74021677fcd1fb21962994d306b8"
+      RR_RUNTIME_REF: "2cecf3249a4e4d02eb6bc629d0752773ba58690d"
       REVIEWROUTER_API_URL: "https://api.reviewrouter.site"
       REVIEWROUTER_OIDC_AUDIENCE: "reviewrouter"
       REVIEWROUTER_RUNTIME_CONFIG_MODE: "oidc"
