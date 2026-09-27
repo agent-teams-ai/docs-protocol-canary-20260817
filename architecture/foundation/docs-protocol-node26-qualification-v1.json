@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "contract": {
+    "id": "agent-teams.docs-protocol.node26-canary",
+    "version": 1
+  },
+  "source": {
+    "repository": "agent-teams-ai/docs-protocol-canary-20260817",
+    "baseSha": "ab5260e16a39a89d58b6aa806eb7f344e302fa0e"
+  },
+  "runtime": {
+    "production": {
+      "version": "24.18.0",
+      "default": true
+    },
+    "canary": {
+      "version": "26.10.0"
+    },
+    "skippedMajors": [
+      25
+    ],
+    "cutover": {
+      "requiresNode26Lts": true,
+      "requiresOwnerAuthorization": true
+    }
+  },
+  "qualification": {
+    "sandbox": {
+      "freshCopyRequired": true,
+      "existingNodeModulesAllowed": false,
+      "isolatedPackageManagerStateRequired": true
+    },
+    "install": {
+      "command": "pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --package-import-method=copy --store-dir <isolated>",
+      "frozenLockfile": true,
+      "engineStrict": true
+    },
+    "apiProbe": "node scripts/node-api-compatibility-probe.mjs",
+    "gate": "pnpm docs:protocol:check"
+  },
+  "foundationArtifact": {
+    "package": "@agent-teams/engineering-foundation",
+    "publishedDependencies": [
+      {
+        "package": "@agent-teams/docs-protocol",
+        "version": "0.6.0",
+        "nodeEngine": ">=24.18.0 <25"
+      },
+      {
+        "package": "@agent-teams/docs-protocol-agent-teams",
+        "version": "0.2.7",
+        "nodeEngine": ">=24.18.0 <25"
+      },
+      {
+        "package": "@agent-teams/document-authoring",
+        "version": "0.3.0",
+        "nodeEngine": ">=24.18.0 <25"
+      },
+      {
+        "package": "@agent-teams/repository-mutation",
+        "version": "0.2.0",
+        "nodeEngine": ">=24.18.0 <25"
+      }
+    ],
+    "current": {
+      "version": "1.2.0",
+      "integrity": "sha512-TBUH9TdTv3RepCbSt9RrIAAEnShYiUDxIotcbkbRkT0HjM+yAzBYNmBlC9qRfPqY3GPutDwTy0uZnPxEesi7vg==",
+      "nodeEngine": ">=24.18.0 <25"
+    },
+    "required": {
+      "distribution": "npm",
+      "nodeEngine": ">=24.18.0 <25 || >=26.10.0 <27",
+      "pnpmEngine": ">=11.17.0 <12",
+      "immutableVersionRequired": true,
+      "immutableIntegrityRequired": true,
+      "version": null,
+      "integrity": null
+    }
+  }
+}

@@ -1,0 +1,75 @@
+name: Node runtime qualification
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/node-runtime-qualification.yml
+      - .npmrc
+      - architecture/foundation/docs-protocol-node26-qualification-v1.json
+      - package.json
+      - scripts/lib/node26-canary-policy.mjs
+      - scripts/node-api-compatibility-probe.mjs
+      - scripts/node26-canary-qualification.mjs
+      - test/node26-canary-policy.test.mjs
+  workflow_dispatch:
+    inputs:
+      run_node24_production:
+        description: Run the retained Node 24 production qualification
+        required: true
+        type: boolean
+        default: true
+      run_node26_canary:
+        description: Run the isolated Node 26 canary qualification
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  node24-production:
+    if: github.event_name == 'pull_request' || inputs.run_node24_production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+      - run: npm install --global corepack@0.36.0 --ignore-scripts
+      - run: node --test test/node26-canary-policy.test.mjs
+      - run: node scripts/node26-canary-qualification.mjs --mode production --work-root "${{ runner.temp }}/node24-production-${{ github.run_id }}-${{ github.run_attempt }}"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: node24-production-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/node24-production-${{ github.run_id }}-${{ github.run_attempt }}/evidence
+          retention-days: 14
+          if-no-files-found: error
+
+  node26-canary:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_node26_canary || vars.NODE26_CANARY_REQUIRED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26.10.0
+      - run: npm install --global corepack@0.36.0 --ignore-scripts
+      - run: node --test test/node26-canary-policy.test.mjs
+      - run: node scripts/node26-canary-qualification.mjs --mode canary --work-root "${{ runner.temp }}/node26-canary-${{ github.run_id }}-${{ github.run_attempt }}"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: node26-canary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/node26-canary-${{ github.run_id }}-${{ github.run_attempt }}/evidence
+          retention-days: 14
+          if-no-files-found: error
