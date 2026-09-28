@@ -119,6 +119,9 @@ try {
   if (!contract.runtime.cutover.requiresNode26Lts || !contract.runtime.cutover.requiresOwnerAuthorization) {
     throw new Error('Node 26 cutover gates must remain explicit');
   }
+  if (contract.qualification.peerValidation !== 'pnpm peers check --lockfile-only') {
+    throw new Error('Locked peer validation contract drifted');
+  }
   const foundationArtifact = assertFoundationArtifact(
     contract,
     JSON.parse(await readFile(join(sandbox, 'package.json'), 'utf8')),
@@ -141,6 +144,7 @@ try {
     '--store-dir',
     join(state, 'pnpm-store')
   ]);
+  run('locked-peer-check', corepack, ['pnpm', 'peers', 'check', '--lockfile-only']);
   run('docs-contract-gate', corepack, ['pnpm', 'docs:protocol:check']);
   const result = {
     outcome: 'passed',

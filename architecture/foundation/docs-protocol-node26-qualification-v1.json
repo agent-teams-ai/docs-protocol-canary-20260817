@@ -35,6 +35,7 @@
       "frozenLockfile": true,
       "engineStrict": true
     },
+    "peerValidation": "pnpm peers check --lockfile-only",
     "apiProbe": "node scripts/node-api-compatibility-probe.mjs",
     "gate": "pnpm docs:protocol:check"
   },
