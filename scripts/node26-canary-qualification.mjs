@@ -25,6 +25,14 @@ const candidateDigestScope = 'copied source tree before install, excluding .git 
 let candidateDigest;
 let ownedRoot;
 let ownedEvidence;
+let ownedSandbox;
+let ownedState;
+
+async function acquireDirectory(path) {
+  const current = await lstat(path);
+  if (!current.isDirectory()) throw new Error(`Qualification directory was replaced: ${path}`);
+  return {dev: current.dev, ino: current.ino};
+}
 
 async function stillOwnsRoot() {
   if (!ownedRoot) return false;
@@ -37,11 +45,11 @@ async function stillOwnsRoot() {
   }
 }
 
-async function stillOwnsEvidence() {
-  if (!ownedEvidence || !await stillOwnsRoot()) return false;
+async function stillOwnsChild(path, owned) {
+  if (!owned || !await stillOwnsRoot()) return false;
   try {
-    const current = await lstat(evidence);
-    return current.isDirectory() && current.dev === ownedEvidence.dev && current.ino === ownedEvidence.ino;
+    const current = await lstat(path);
+    return current.isDirectory() && current.dev === owned.dev && current.ino === owned.ino;
   } catch (error) {
     if (error.code === 'ENOENT') return false;
     throw error;
@@ -92,11 +100,13 @@ try {
     throw new Error('Qualification work root must be outside the source tree');
   }
   await mkdir(workRoot, {recursive: false});
-  ownedRoot = await lstat(workRoot);
-  if (!ownedRoot.isDirectory()) throw new Error('Qualification work root was replaced');
+  ownedRoot = await acquireDirectory(workRoot);
   await mkdir(evidence);
-  ownedEvidence = await lstat(evidence);
+  ownedEvidence = await acquireDirectory(evidence);
   await mkdir(state);
+  ownedState = await acquireDirectory(state);
+  await mkdir(sandbox);
+  ownedSandbox = await acquireDirectory(sandbox);
   const expected = assertRuntimeMode(process.version, mode);
   await assertNoInstalledTree(source);
   const contractRelative = relative(source, contractPath);
@@ -161,7 +171,7 @@ try {
     reusedNodeModules: false,
     commands
   };
-  if (!await stillOwnsEvidence()) throw new Error('Qualification evidence ownership was lost');
+  if (!await stillOwnsChild(evidence, ownedEvidence)) throw new Error('Qualification evidence ownership was lost');
   await writeFile(join(evidence, 'result.json'), JSON.stringify(result, null, 2)+'\n');
   process.stdout.write(JSON.stringify(result, null, 2)+'\n');
 } catch (error) {
@@ -180,20 +190,25 @@ try {
     if (!ownedEvidence) {
       try {
         await mkdir(evidence);
-        ownedEvidence = await lstat(evidence);
+        ownedEvidence = await acquireDirectory(evidence);
       } catch (mkdirError) {
         if (mkdirError.code !== 'EEXIST') throw mkdirError;
       }
     }
-    if (await stillOwnsEvidence()) {
+    if (await stillOwnsChild(evidence, ownedEvidence)) {
       await writeFile(join(evidence, 'failure.json'), JSON.stringify(result, null, 2)+'\n');
     }
   }
   process.stdout.write(JSON.stringify(result, null, 2)+'\n');
   process.exitCode = 1;
 } finally {
-  if (await stillOwnsRoot()) {
-    await rm(sandbox, {recursive: true, force: true});
-    await rm(state, {recursive: true, force: true});
+  try {
+    if (await stillOwnsChild(sandbox, ownedSandbox)) {
+      await rm(sandbox, {recursive: true, force: true});
+    }
+  } finally {
+    if (await stillOwnsChild(state, ownedState)) {
+      await rm(state, {recursive: true, force: true});
+    }
   }
 }

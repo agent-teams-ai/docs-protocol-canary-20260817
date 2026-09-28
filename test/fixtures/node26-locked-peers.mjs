@@ -47,6 +47,7 @@ async function pack(name, version, peerRange) {
 }
 
 try {
+  await writeFile(join(root, 'pnpm-workspace.yaml'), "packages:\n  - '.'\nengineStrict: true\nstrictPeerDependencies: true\n");
   const version = pnpm(['--version']);
   requireSuccess(version, 'pnpm version');
   assert.equal(version.stdout.trim(), '11.18.0');

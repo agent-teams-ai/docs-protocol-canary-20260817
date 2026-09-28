@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
-import {mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile} from 'node:fs/promises';
+import {cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import test from 'node:test';
@@ -158,6 +158,76 @@ test('symlinked source and work-root parent are rejected before creating evidenc
       assert.match(JSON.parse(result.stdout).message, /symlink/);
     }
     assert.deepEqual((await readdir(fixture)).sort(), ['parent-link', 'source', 'source-link']);
+  } finally {
+    await rm(fixture, {recursive: true, force: true});
+  }
+});
+
+test('cleanup preserves independently replaced consumer and state directories or symlinks', async () => {
+  const fixture = await mkdtemp(join(tmpdir(), 'node26-child-cleanup-'));
+  try {
+    const runner = await readFile(resolve('scripts/node26-canary-qualification.mjs'), 'utf8');
+    const seam = '  const expected = assertRuntimeMode(process.version, mode);';
+    assert.equal(runner.split(seam).length, 2);
+    await mkdir(join(fixture, 'scripts', 'lib'), {recursive: true});
+    await cp(resolve('scripts/lib/node26-canary-policy.mjs'), join(fixture, 'scripts', 'lib', 'node26-canary-policy.mjs'));
+    const source = join(fixture, 'source');
+    await mkdir(source);
+    for (const {name, replacement, targets} of [
+      {name: 'consumer-only', replacement: 'directory', targets: ['consumer']},
+      {name: 'state-only', replacement: 'directory', targets: ['state']},
+      {name: 'both-directories', replacement: 'directory', targets: ['consumer', 'state']},
+      {name: 'both-symlinks', replacement: 'symlink', targets: ['consumer', 'state']}
+    ]) {
+      const workRoot = join(fixture, `work-${name}`);
+      const injection = `  {
+    const fs = await import('node:fs/promises');
+    for (const target of ${JSON.stringify(targets)}) {
+      const original = join(workRoot, target);
+      await fs.rename(original, join(workRoot, 'former-' + target));
+      const foreign = join(${JSON.stringify(fixture)}, 'foreign-${name}-' + target);
+      await fs.mkdir(foreign);
+      await fs.writeFile(join(foreign, 'sentinel'), 'foreign-' + target);
+      if ('${replacement}' === 'symlink') await fs.symlink(foreign, original, 'dir');
+      else await fs.rename(foreign, original);
+    }
+    throw new Error('injected failure after foreign replacement');
+  }
+`;
+      const faultRunner = join(fixture, 'scripts', `fault-${name}.mjs`);
+      await writeFile(faultRunner, runner.replace(seam, injection + seam));
+      const result = spawnSync(process.execPath, [faultRunner, '--source', source, '--work-root', workRoot], {encoding: 'utf8'});
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(JSON.parse(result.stdout).message, 'injected failure after foreign replacement');
+      for (const target of ['consumer', 'state']) {
+        const path = join(workRoot, target);
+        if (targets.includes(target)) {
+          assert.equal((await lstat(path)).isSymbolicLink(), replacement === 'symlink');
+          assert.equal(await readFile(join(path, 'sentinel'), 'utf8'), `foreign-${target}`);
+        } else {
+          await assert.rejects(lstat(path), {code: 'ENOENT'});
+        }
+      }
+    }
+    for (const target of ['root', 'evidence']) {
+      const workRoot = join(fixture, `work-replaced-${target}`);
+      const path = target === 'root' ? workRoot : join(workRoot, 'evidence');
+      const injection = `  {
+    const fs = await import('node:fs/promises');
+    await fs.rename(${JSON.stringify(path)}, ${JSON.stringify(path + '-former')});
+    await fs.mkdir(${JSON.stringify(path)});
+    await fs.writeFile(join(${JSON.stringify(path)}, 'sentinel'), 'foreign-${target}');
+    throw new Error('injected failure after foreign replacement');
+  }
+`;
+      const faultRunner = join(fixture, 'scripts', `fault-replaced-${target}.mjs`);
+      await writeFile(faultRunner, runner.replace(seam, injection + seam));
+      const result = spawnSync(process.execPath, [faultRunner, '--source', source, '--work-root', workRoot], {encoding: 'utf8'});
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(JSON.parse(result.stdout).message, 'injected failure after foreign replacement');
+      assert.equal(await readFile(join(path, 'sentinel'), 'utf8'), `foreign-${target}`);
+      if (target === 'evidence') await assert.rejects(readFile(join(path, 'failure.json')), {code: 'ENOENT'});
+    }
   } finally {
     await rm(fixture, {recursive: true, force: true});
   }
