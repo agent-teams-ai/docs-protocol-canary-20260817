@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import {execFileSync} from 'node:child_process';
-import {mkdir, mkdtemp, readFile, rm, symlink, writeFile} from 'node:fs/promises';
+import {execFileSync, spawnSync} from 'node:child_process';
+import {mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join, resolve} from 'node:path';
 import test from 'node:test';
 import {
   assertCleanSandbox,
@@ -55,6 +55,15 @@ test('cannot qualify while publication is pending or artifact identity drifts fr
   const lock = await readFile('pnpm-lock.yaml', 'utf8');
   const managed = JSON.parse(await readFile('architecture/foundation/docs-protocol-managed-state.json', 'utf8'));
   assert.throws(() => assertFoundationArtifact(contract, manifest, lock, managed), /pending publication/);
+  assert.deepEqual(assertFoundationArtifact(contract, manifest, lock, managed, 'production'), {
+    package: '@agent-teams/engineering-foundation',
+    version: contract.foundationArtifact.current.version,
+    integrity: contract.foundationArtifact.current.integrity,
+    nodeEngine: contract.foundationArtifact.current.nodeEngine
+  });
+  const wrongRetained = structuredClone(contract);
+  wrongRetained.foundationArtifact.current.integrity = `sha512-${Buffer.alloc(64).toString('base64')}`;
+  assert.throws(() => assertFoundationArtifact(wrongRetained, manifest, lock, managed, 'production'), /Lockfile foundation integrity/);
 
   // The retained artifact provides a real, already locked identity for this fixture.
   const published = structuredClone(contract);
@@ -86,6 +95,72 @@ test('cannot qualify while publication is pending or artifact identity drifts fr
   const missingManaged = structuredClone(managed);
   delete missingManaged.packages.engineeringFoundation;
   assert.throws(() => assertFoundationArtifact(published, matchingManifest, lock, missingManaged), /Managed foundation version/);
+});
+
+test('exclusive work-root collision preserves existing consumer, state, and evidence bytes', async () => {
+  const fixture = await mkdtemp(join(tmpdir(), 'node26-work-root-collision-'));
+  try {
+    const source = join(fixture, 'source');
+    const workRoot = join(fixture, 'occupied');
+    await mkdir(source);
+    for (const directory of ['consumer', 'state', 'evidence']) {
+      await mkdir(join(workRoot, directory), {recursive: true});
+      await writeFile(join(workRoot, directory, 'sentinel'), `${directory}-owned-by-another-run`);
+    }
+    const result = spawnSync(process.execPath, [resolve('scripts/node26-canary-qualification.mjs'), '--source', source, '--work-root', workRoot], {encoding: 'utf8'});
+    assert.equal(result.status, 1);
+    assert.match(JSON.parse(result.stdout).message, /EEXIST/);
+    for (const directory of ['consumer', 'state', 'evidence']) {
+      assert.equal(await readFile(join(workRoot, directory, 'sentinel'), 'utf8'), `${directory}-owned-by-another-run`);
+    }
+    await assert.rejects(readFile(join(workRoot, 'evidence', 'failure.json')));
+  } finally {
+    await rm(fixture, {recursive: true, force: true});
+  }
+});
+
+test('symlinked work root has no effects on its target', async () => {
+  const fixture = await mkdtemp(join(tmpdir(), 'node26-work-root-link-'));
+  try {
+    const source = join(fixture, 'source');
+    const target = join(fixture, 'target');
+    const workRoot = join(fixture, 'linked-root');
+    await mkdir(source);
+    await mkdir(target);
+    await writeFile(join(target, 'sentinel'), 'outside-target-bytes');
+    await symlink(target, workRoot, 'dir');
+    const result = spawnSync(process.execPath, [resolve('scripts/node26-canary-qualification.mjs'), '--source', source, '--work-root', workRoot], {encoding: 'utf8'});
+    assert.equal(result.status, 1);
+    assert.match(JSON.parse(result.stdout).message, /EEXIST/);
+    assert.equal(await readFile(join(target, 'sentinel'), 'utf8'), 'outside-target-bytes');
+    assert.deepEqual(await readdir(target), ['sentinel']);
+    await assert.rejects(readFile(join(target, 'evidence', 'failure.json')));
+  } finally {
+    await rm(fixture, {recursive: true, force: true});
+  }
+});
+
+test('symlinked source and work-root parent are rejected before creating evidence', async () => {
+  const fixture = await mkdtemp(join(tmpdir(), 'node26-root-parent-link-'));
+  try {
+    const source = join(fixture, 'source');
+    const sourceLink = join(fixture, 'source-link');
+    const parentLink = join(fixture, 'parent-link');
+    await mkdir(source);
+    await symlink(source, sourceLink, 'dir');
+    await symlink(fixture, parentLink, 'dir');
+    for (const [candidateSource, workRoot] of [
+      [sourceLink, join(fixture, 'source-link-work')],
+      [source, join(parentLink, 'parent-link-work')]
+    ]) {
+      const result = spawnSync(process.execPath, [resolve('scripts/node26-canary-qualification.mjs'), '--source', candidateSource, '--work-root', workRoot], {encoding: 'utf8'});
+      assert.equal(result.status, 1);
+      assert.match(JSON.parse(result.stdout).message, /symlink/);
+    }
+    assert.deepEqual((await readdir(fixture)).sort(), ['parent-link', 'source', 'source-link']);
+  } finally {
+    await rm(fixture, {recursive: true, force: true});
+  }
 });
 
 test('rejects copied symlinks, including escapes, and binds candidate digest to file bytes', async () => {

@@ -1,5 +1,5 @@
 import {execFileSync} from 'node:child_process';
-import {mkdir, cp, lstat, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdir, cp, lstat, readFile, realpath, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {assertCleanSandbox, assertFoundationArtifact, assertNoInstalledTree, assertRuntimeMode, candidateTreeDigest, runtimeModes} from './lib/node26-canary-policy.mjs';
@@ -23,6 +23,30 @@ const state = join(workRoot, 'state');
 const commands = [];
 const candidateDigestScope = 'copied source tree before install, excluding .git and node_modules';
 let candidateDigest;
+let ownedRoot;
+let ownedEvidence;
+
+async function stillOwnsRoot() {
+  if (!ownedRoot) return false;
+  try {
+    const current = await lstat(workRoot);
+    return current.isDirectory() && current.dev === ownedRoot.dev && current.ino === ownedRoot.ino;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
+async function stillOwnsEvidence() {
+  if (!ownedEvidence || !await stillOwnsRoot()) return false;
+  try {
+    const current = await lstat(evidence);
+    return current.isDirectory() && current.dev === ownedEvidence.dev && current.ino === ownedEvidence.ino;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
+}
 
 function run(label, binary, args, cwd = sandbox) {
   try {
@@ -59,11 +83,21 @@ function run(label, binary, args, cwd = sandbox) {
 }
 
 try {
+  if ((await lstat(source)).isSymbolicLink()) throw new Error('Qualification source root must not be a symlink');
+  if (await realpath(source) !== source || await realpath(dirname(workRoot)) !== dirname(workRoot)) {
+    throw new Error('Qualification source and work-root parent must not traverse symlinks');
+  }
+  const rootRelative = relative(source, workRoot);
+  if (!rootRelative || (rootRelative !== '..' && !rootRelative.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(rootRelative))) {
+    throw new Error('Qualification work root must be outside the source tree');
+  }
   await mkdir(workRoot, {recursive: false});
+  ownedRoot = await lstat(workRoot);
+  if (!ownedRoot.isDirectory()) throw new Error('Qualification work root was replaced');
   await mkdir(evidence);
+  ownedEvidence = await lstat(evidence);
   await mkdir(state);
   const expected = assertRuntimeMode(process.version, mode);
-  if ((await lstat(source)).isSymbolicLink()) throw new Error('Qualification source root must not be a symlink');
   await assertNoInstalledTree(source);
   const contractRelative = relative(source, contractPath);
   if (!contractRelative || contractRelative === '..' || contractRelative.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) || isAbsolute(contractRelative)) {
@@ -89,7 +123,8 @@ try {
     contract,
     JSON.parse(await readFile(join(sandbox, 'package.json'), 'utf8')),
     await readFile(join(sandbox, 'pnpm-lock.yaml'), 'utf8'),
-    JSON.parse(await readFile(join(sandbox, 'architecture/foundation/docs-protocol-managed-state.json'), 'utf8'))
+    JSON.parse(await readFile(join(sandbox, 'architecture/foundation/docs-protocol-managed-state.json'), 'utf8')),
+    mode
   );
   const corepack = process.env.COREPACK_BIN ?? join(dirname(process.execPath), 'corepack');
   const version = run('package-manager-version', corepack, ['pnpm', '--version']);
@@ -122,6 +157,7 @@ try {
     reusedNodeModules: false,
     commands
   };
+  if (!await stillOwnsEvidence()) throw new Error('Qualification evidence ownership was lost');
   await writeFile(join(evidence, 'result.json'), JSON.stringify(result, null, 2)+'\n');
   process.stdout.write(JSON.stringify(result, null, 2)+'\n');
 } catch (error) {
@@ -136,11 +172,24 @@ try {
     message: error.message,
     commands
   };
-  await mkdir(evidence, {recursive: true});
-  await writeFile(join(evidence, 'failure.json'), JSON.stringify(result, null, 2)+'\n');
+  if (await stillOwnsRoot()) {
+    if (!ownedEvidence) {
+      try {
+        await mkdir(evidence);
+        ownedEvidence = await lstat(evidence);
+      } catch (mkdirError) {
+        if (mkdirError.code !== 'EEXIST') throw mkdirError;
+      }
+    }
+    if (await stillOwnsEvidence()) {
+      await writeFile(join(evidence, 'failure.json'), JSON.stringify(result, null, 2)+'\n');
+    }
+  }
   process.stdout.write(JSON.stringify(result, null, 2)+'\n');
   process.exitCode = 1;
 } finally {
-  await rm(sandbox, {recursive: true, force: true});
-  await rm(state, {recursive: true, force: true});
+  if (await stillOwnsRoot()) {
+    await rm(sandbox, {recursive: true, force: true});
+    await rm(state, {recursive: true, force: true});
+  }
 }

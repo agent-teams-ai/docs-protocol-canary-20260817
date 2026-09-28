@@ -80,19 +80,23 @@ function field(text, pattern, label) {
   return matches[0];
 }
 
-export function assertFoundationArtifact(contract, manifest, lockText, managed) {
+export function assertFoundationArtifact(contract, manifest, lockText, managed, mode = 'canary') {
   const artifact = contract.foundationArtifact;
-  const required = artifact?.required;
-  if (artifact?.package !== '@agent-teams/engineering-foundation' || required?.distribution !== 'npm' ||
-      required?.immutableVersionRequired !== true || required?.immutableIntegrityRequired !== true) {
+  const publication = artifact?.required;
+  if (artifact?.package !== '@agent-teams/engineering-foundation' || publication?.distribution !== 'npm' ||
+      publication?.immutableVersionRequired !== true || publication?.immutableIntegrityRequired !== true) {
     throw new Error('Foundation artifact contract is incomplete');
   }
-  if (required.status !== 'published' || !required.version || !required.integrity ||
+  if (mode !== 'production' && mode !== 'canary') throw new Error(`Unsupported qualification mode: ${mode}`);
+  const required = mode === 'production'
+    ? {...artifact.current, pnpmEngine: publication.pnpmEngine}
+    : publication;
+  if ((mode === 'canary' && required.status !== 'published') || !required.version || !required.integrity ||
       !/^sha512-[A-Za-z0-9+/]+={0,2}$/.test(required.integrity)) {
     throw new Error('Foundation artifact identity is pending publication');
   }
   requireMatch(manifest.devDependencies?.[artifact.package], required.version, 'Manifest foundation version');
-  requireMatch(manifest.engines?.node, required.nodeEngine, 'Manifest Node engine');
+  requireMatch(manifest.engines?.node, publication.nodeEngine, 'Manifest Node engine');
   requireMatch(manifest.engines?.pnpm, required.pnpmEngine, 'Manifest pnpm engine');
   const importer = block(block(lockText, 'importers', 0), '.', 2);
   const dependencyBlock = block(block(importer, 'devDependencies', 4), `'${artifact.package}'`, 6);
