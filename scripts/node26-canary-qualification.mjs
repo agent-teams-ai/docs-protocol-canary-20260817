@@ -1,8 +1,8 @@
 import {execFileSync} from 'node:child_process';
-import {mkdir, cp, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdir, cp, lstat, readFile, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {dirname, join, resolve} from 'node:path';
-import {assertCleanSandbox, assertNoInstalledTree, assertRuntimeMode, runtimeModes} from './lib/node26-canary-policy.mjs';
+import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
+import {assertCleanSandbox, assertFoundationArtifact, assertNoInstalledTree, assertRuntimeMode, candidateTreeDigest, runtimeModes} from './lib/node26-canary-policy.mjs';
 
 function option(name, fallback) {
   const index = process.argv.indexOf(`--${name}`);
@@ -14,24 +14,15 @@ function option(name, fallback) {
 
 const mode = option('mode', 'canary');
 const source = resolve(option('source', process.cwd()));
-const contractPath = resolve(option('contract', 'architecture/foundation/docs-protocol-node26-qualification-v1.json'));
+const contractPath = resolve(source, option('contract', 'architecture/foundation/docs-protocol-node26-qualification-v1.json'));
 const workBase = process.env.RUNNER_TEMP ?? tmpdir();
 const workRoot = resolve(option('work-root', join(workBase, `docs-protocol-${mode}-qualification-${process.pid}-${Date.now()}`)));
-const expected = assertRuntimeMode(process.version, mode);
-await assertNoInstalledTree(source);
-
-const contract = JSON.parse(await readFile(contractPath, 'utf8'));
-if (contract.runtime.production.version !== runtimeModes.production.version) throw new Error('Production runtime contract drifted');
-if (contract.runtime.canary.version !== runtimeModes.canary.version) throw new Error('Canary runtime contract drifted');
-if (!contract.runtime.skippedMajors.includes(25)) throw new Error('Node 25 must remain skipped');
-if (!contract.runtime.cutover.requiresNode26Lts || !contract.runtime.cutover.requiresOwnerAuthorization) {
-  throw new Error('Node 26 cutover gates must remain explicit');
-}
-
 const sandbox = join(workRoot, 'consumer');
 const evidence = join(workRoot, 'evidence');
 const state = join(workRoot, 'state');
 const commands = [];
+const candidateDigestScope = 'copied source tree before install, excluding .git and node_modules';
+let candidateDigest;
 
 function run(label, binary, args, cwd = sandbox) {
   try {
@@ -71,6 +62,13 @@ try {
   await mkdir(workRoot, {recursive: false});
   await mkdir(evidence);
   await mkdir(state);
+  const expected = assertRuntimeMode(process.version, mode);
+  if ((await lstat(source)).isSymbolicLink()) throw new Error('Qualification source root must not be a symlink');
+  await assertNoInstalledTree(source);
+  const contractRelative = relative(source, contractPath);
+  if (!contractRelative || contractRelative === '..' || contractRelative.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) || isAbsolute(contractRelative)) {
+    throw new Error('Qualification contract must be inside the source tree');
+  }
   await cp(source, sandbox, {
     recursive: true,
     filter: path => {
@@ -79,6 +77,20 @@ try {
     }
   });
   await assertCleanSandbox(sandbox);
+  candidateDigest = await candidateTreeDigest(sandbox);
+  const contract = JSON.parse(await readFile(join(sandbox, contractRelative), 'utf8'));
+  if (contract.runtime.production.version !== runtimeModes.production.version) throw new Error('Production runtime contract drifted');
+  if (contract.runtime.canary.version !== runtimeModes.canary.version) throw new Error('Canary runtime contract drifted');
+  if (!contract.runtime.skippedMajors.includes(25)) throw new Error('Node 25 must remain skipped');
+  if (!contract.runtime.cutover.requiresNode26Lts || !contract.runtime.cutover.requiresOwnerAuthorization) {
+    throw new Error('Node 26 cutover gates must remain explicit');
+  }
+  const foundationArtifact = assertFoundationArtifact(
+    contract,
+    JSON.parse(await readFile(join(sandbox, 'package.json'), 'utf8')),
+    await readFile(join(sandbox, 'pnpm-lock.yaml'), 'utf8'),
+    JSON.parse(await readFile(join(sandbox, 'architecture/foundation/docs-protocol-managed-state.json'), 'utf8'))
+  );
   const corepack = process.env.COREPACK_BIN ?? join(dirname(process.execPath), 'corepack');
   const version = run('package-manager-version', corepack, ['pnpm', '--version']);
   if (version.stdout.trim() !== '11.18.0') throw new Error(`Expected pnpm 11.18.0, received ${version.stdout.trim()}`);
@@ -102,7 +114,10 @@ try {
     actualNode: process.version,
     packageManager: version.stdout.trim(),
     source,
+    candidateDigest,
+    candidateDigestScope,
     contract: contract.contract,
+    foundationArtifact,
     isolated: true,
     reusedNodeModules: false,
     commands
@@ -113,8 +128,11 @@ try {
   const result = {
     outcome: 'blocked',
     mode,
-    expectedNode: expected.version,
+    expectedNode: runtimeModes[mode]?.version ?? null,
     actualNode: process.version,
+    source,
+    candidateDigest: candidateDigest ?? null,
+    candidateDigestScope: candidateDigest ? candidateDigestScope : null,
     message: error.message,
     commands
   };

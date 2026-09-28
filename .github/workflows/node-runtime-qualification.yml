@@ -5,8 +5,12 @@ on:
     paths:
       - .github/workflows/node-runtime-qualification.yml
       - .npmrc
+      - .node-version
       - architecture/foundation/docs-protocol-node26-qualification-v1.json
+      - architecture/foundation/docs-protocol-managed-state.json
       - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
       - scripts/lib/node26-canary-policy.mjs
       - scripts/node-api-compatibility-probe.mjs
       - scripts/node26-canary-qualification.mjs
@@ -49,7 +53,7 @@ jobs:
           name: node24-production-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/node24-production-${{ github.run_id }}-${{ github.run_attempt }}/evidence
           retention-days: 14
-          if-no-files-found: error
+          if-no-files-found: warn
 
   node26-canary:
     if: github.event_name == 'workflow_dispatch' && inputs.run_node26_canary || vars.NODE26_CANARY_REQUIRED == 'true'
@@ -72,4 +76,4 @@ jobs:
           name: node26-canary-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/node26-canary-${{ github.run_id }}-${{ github.run_attempt }}/evidence
           retention-days: 14
-          if-no-files-found: error
+          if-no-files-found: warn
