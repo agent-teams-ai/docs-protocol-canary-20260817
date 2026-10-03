@@ -54,7 +54,7 @@ jobs:
           trap 'rm -rf -- "$policy_tools_root"' EXIT
           cp scripts/node26-public-packages/manifest.json "$policy_tools_root/package.json"
           cp scripts/node26-public-packages/locked-dependencies.yaml "$policy_tools_root/pnpm-lock.yaml"
-          cp scripts/node26-public-packages/pnpm-workspace.yaml "$policy_tools_root/pnpm-workspace.yaml"
+          cp scripts/node26-public-packages/pnpm-workspace.yaml.in "$policy_tools_root/pnpm-workspace.yaml"
           corepack pnpm --dir "$policy_tools_root" install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --package-import-method=copy --store-dir "$policy_tools_root/store"
           NODE26_POLICY_TOOLS="$policy_tools_root" node --test test/node26-canary-policy.test.mjs
       - run: node scripts/node26-canary-qualification.mjs --mode production --work-root "${{ runner.temp }}/node24-production-${{ github.run_id }}-${{ github.run_attempt }}"
@@ -86,7 +86,7 @@ jobs:
           trap 'rm -rf -- "$policy_tools_root"' EXIT
           cp scripts/node26-public-packages/manifest.json "$policy_tools_root/package.json"
           cp scripts/node26-public-packages/locked-dependencies.yaml "$policy_tools_root/pnpm-lock.yaml"
-          cp scripts/node26-public-packages/pnpm-workspace.yaml "$policy_tools_root/pnpm-workspace.yaml"
+          cp scripts/node26-public-packages/pnpm-workspace.yaml.in "$policy_tools_root/pnpm-workspace.yaml"
           corepack pnpm --dir "$policy_tools_root" install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --package-import-method=copy --store-dir "$policy_tools_root/store"
           NODE26_POLICY_TOOLS="$policy_tools_root" node --test test/node26-canary-policy.test.mjs
       - run: node scripts/node26-canary-qualification.mjs --mode canary --work-root "${{ runner.temp }}/node26-canary-${{ github.run_id }}-${{ github.run_attempt }}"
@@ -119,7 +119,7 @@ jobs:
           trap 'rm -rf -- "$policy_tools_root"' EXIT
           cp scripts/node26-public-packages/manifest.json "$policy_tools_root/package.json"
           cp scripts/node26-public-packages/locked-dependencies.yaml "$policy_tools_root/pnpm-lock.yaml"
-          cp scripts/node26-public-packages/pnpm-workspace.yaml "$policy_tools_root/pnpm-workspace.yaml"
+          cp scripts/node26-public-packages/pnpm-workspace.yaml.in "$policy_tools_root/pnpm-workspace.yaml"
           corepack pnpm --dir "$policy_tools_root" install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --package-import-method=copy --store-dir "$policy_tools_root/store"
           NODE26_POLICY_TOOLS="$policy_tools_root" node --test test/node26-canary-policy.test.mjs
       - run: node scripts/node26-canary-qualification.mjs --mode package-compatibility --work-root "${{ runner.temp }}/node26-package-compatibility-${{ github.run_id }}-${{ github.run_attempt }}"

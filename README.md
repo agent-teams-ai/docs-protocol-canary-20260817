@@ -34,7 +34,9 @@ Node26 API target. Node26 then strips erasable syntax to execute `probe.mts`;
 type stripping does not replace typechecking. The retained Main-generated fixture
 lock includes the exact compiler and Node types.
 
-The separate fixture uses `scripts/node26-public-packages/pnpm-workspace.yaml`.
+The separate fixture stores inert data in `scripts/node26-public-packages/pnpm-workspace.yaml.in`.
+pnpm reads this policy only after an explicit copy to `pnpm-workspace.yaml`
+in a separate external install root; Source has no nested workspace.
 Its only setting, `minimumReleaseAgeExclude`, names exact Foundation1.7.2 and
 adapter0.3.2, the two already qualified versions refused by gate1277. It leaves
 pnpm11's default age guard for every other coordinate. The runner and all three
@@ -56,7 +58,7 @@ runner contract. The published five-package pins are separate from selection.
 ```sh
 resolution_root=$(mktemp -d)
 cp scripts/node26-public-packages/manifest.json "$resolution_root/package.json"
-cp scripts/node26-public-packages/pnpm-workspace.yaml "$resolution_root/pnpm-workspace.yaml"
+cp scripts/node26-public-packages/pnpm-workspace.yaml.in "$resolution_root/pnpm-workspace.yaml"
 corepack pnpm --dir "$resolution_root" --version # must be 11.18.0
 corepack pnpm --dir "$resolution_root" install --lockfile-only --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --store-dir "$resolution_root/store" --config.manage-package-manager-versions=false
 # Review exact direct pins, five package/parser/compiler/Node type SRIs, and peer contexts.

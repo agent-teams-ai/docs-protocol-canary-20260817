@@ -127,7 +127,7 @@ try {
   }
   await cp(join(sandbox, fixture.manifest), join(packages, 'package.json'));
   await cp(join(sandbox, fixture.lockfile), join(packages, 'pnpm-lock.yaml'));
-  await cp(join(sandbox, 'scripts/node26-public-packages/pnpm-workspace.yaml'), join(packages, 'pnpm-workspace.yaml'));
+  await cp(join(sandbox, 'scripts/node26-public-packages/pnpm-workspace.yaml.in'), join(packages, 'pnpm-workspace.yaml'));
   const install = [
     'pnpm', 'install', '--frozen-lockfile', '--ignore-scripts', '--ignore-pnpmfile',
     '--engine-strict', '--strict-peer-dependencies', '--package-import-method=copy',
