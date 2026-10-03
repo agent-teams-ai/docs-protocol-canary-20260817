@@ -1,0 +1,20 @@
+{
+  "name": "canary-public-package-compatibility",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=24.18.0 <25 || >=26.10.0 <27",
+    "pnpm": ">=11.17.0 <12"
+  },
+  "devDependencies": {
+    "@agent-teams/docs-protocol": "0.6.2",
+    "@agent-teams/docs-protocol-agent-teams": "0.3.2",
+    "@agent-teams/engineering-foundation": "1.7.2",
+    "@types/node": "26.6.4",
+    "semver": "7.8.5",
+    "typescript": "7.0.2",
+    "yaml": "2.9.1"
+  }
+}

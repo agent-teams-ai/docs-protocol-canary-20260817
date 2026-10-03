@@ -2,11 +2,13 @@
   "schemaVersion": 1,
   "contract": {
     "id": "agent-teams.docs-protocol.node26-canary",
-    "version": 1
+    "version": 2
   },
   "source": {
     "repository": "agent-teams-ai/docs-protocol-canary-20260817",
-    "baseSha": "ab5260e16a39a89d58b6aa806eb7f344e302fa0e"
+    "baseSha": "ab5260e16a39a89d58b6aa806eb7f344e302fa0e",
+    "existingPrHead": "e36d818cc9e033084b036443c0ed59931aabcaa2",
+    "currentMainSha": "c78c0df756197696222fc0ea4eeb4ed69d6df3bf"
   },
   "runtime": {
     "production": {
@@ -31,9 +33,10 @@
       "isolatedPackageManagerStateRequired": true
     },
     "install": {
-      "command": "pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --package-import-method=copy --store-dir <isolated>",
+      "command": "pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --package-import-method=copy --store-dir <isolated>",
       "frozenLockfile": true,
-      "engineStrict": true
+      "engineStrict": true,
+      "strictPeerDependencies": true
     },
     "peerValidation": "pnpm peers check --lockfile-only",
     "apiProbe": "node scripts/node-api-compatibility-probe.mjs",
@@ -43,40 +46,160 @@
     "package": "@agent-teams/engineering-foundation",
     "publishedDependencies": [
       {
-        "package": "@agent-teams/docs-protocol",
-        "version": "0.6.0",
-        "nodeEngine": ">=24.18.0 <25"
-      },
-      {
-        "package": "@agent-teams/docs-protocol-agent-teams",
-        "version": "0.2.7",
-        "nodeEngine": ">=24.18.0 <25"
+        "package": "@agent-teams/repository-mutation",
+        "version": "0.2.2",
+        "integrity": "sha512-4G6kkQKA7ua4z9mxxn1XNrBUgngWeQ+UufDnQ34YdYv26DZi1/pUYwGoKajFluhUNDXhvqf4fMJQu0nI6m6jdg==",
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "pnpmEngine": ">=11.17.0 <12",
+        "direct": false,
+        "managedKey": "repositoryMutation"
       },
       {
         "package": "@agent-teams/document-authoring",
-        "version": "0.3.0",
-        "nodeEngine": ">=24.18.0 <25"
+        "version": "0.3.2",
+        "integrity": "sha512-GzdetjP25KJfThxNk7UhtAZ28rOb6T/rTRrjYSrp2rYaEt0do5XF4pGjIVdeSzh+zXH0ULu58TZsuhOJi0Q0Mw==",
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "pnpmEngine": ">=11.17.0 <12",
+        "direct": false,
+        "managedKey": "documentAuthoring"
       },
       {
-        "package": "@agent-teams/repository-mutation",
-        "version": "0.2.0",
-        "nodeEngine": ">=24.18.0 <25"
+        "package": "@agent-teams/docs-protocol",
+        "version": "0.6.2",
+        "integrity": "sha512-kqE4pA9/V/MgbOm2nTyfRWU+CuwtAX6pB6WGQauKvvozwS4CzFfJwARTgd91R3yCf6bi5l/kU+mcAe6WVID7aA==",
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "pnpmEngine": ">=11.17.0 <12",
+        "direct": true,
+        "managedKey": "docsProtocol"
+      },
+      {
+        "package": "@agent-teams/docs-protocol-agent-teams",
+        "version": "0.3.2",
+        "integrity": "sha512-JgNRR4x+3ckfzCqadNEJrqIwdZ7Lz1p981sWcqDObviWoK5hmOwu13v8/PO03d1WWUdnunDp8T95PnRbuYfjiQ==",
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "pnpmEngine": ">=11.17.0 <12",
+        "direct": true,
+        "managedKey": "docsProtocolAgentTeams"
       }
     ],
     "current": {
       "version": "1.2.0",
       "integrity": "sha512-TBUH9TdTv3RepCbSt9RrIAAEnShYiUDxIotcbkbRkT0HjM+yAzBYNmBlC9qRfPqY3GPutDwTy0uZnPxEesi7vg==",
-      "nodeEngine": ">=24.18.0 <25"
+      "nodeEngine": ">=24.18.0 <25",
+      "cohortId": "docs-2026-09-11-stable20",
+      "pnpmEngine": ">=11.17.0 <12",
+      "publishedDependencies": [
+        {
+          "package": "@agent-teams/repository-mutation",
+          "managedKey": "repositoryMutation",
+          "version": "0.2.0",
+          "integrity": "sha512-a02kzLlWtQjPAG2fFo/HyC+T6D+hW+FJ+aNCYoTLuTdKqeuL50hIvSnQLMUbGajWBb4nAvaINvW2jvmJ+Qku0g==",
+          "nodeEngine": ">=24.18.0 <25",
+          "pnpmEngine": ">=11.17.0 <12",
+          "direct": false
+        },
+        {
+          "package": "@agent-teams/document-authoring",
+          "managedKey": "documentAuthoring",
+          "version": "0.3.0",
+          "integrity": "sha512-LdNT8VHPQxXvuyXsCblFSeCmbEEZcXwiCTY1E+c0ZEWWJG0V2qoi95F8fHAwI4ngZLDmLr/yzHGyDqwkd9GBrA==",
+          "nodeEngine": ">=24.18.0 <25",
+          "pnpmEngine": ">=11.17.0 <12",
+          "direct": false
+        },
+        {
+          "package": "@agent-teams/docs-protocol",
+          "managedKey": "docsProtocol",
+          "version": "0.6.0",
+          "integrity": "sha512-xSlc0DFTGh0jed9581LoToHAXwxxZMhzlItbPeoc67YNBSDxLCP8XNwK0LCMs4w8MLqY6silJDtpzsHFw2XSVg==",
+          "nodeEngine": ">=24.18.0 <25",
+          "pnpmEngine": ">=11.17.0 <12",
+          "direct": true
+        },
+        {
+          "package": "@agent-teams/docs-protocol-agent-teams",
+          "managedKey": "docsProtocolAgentTeams",
+          "version": "0.2.7",
+          "integrity": "sha512-YhgXKwsq2JlFisS+vaXBriDvbD+8wEQErMJqZCRaE4DEaZ+z+AWMgVYbpe4lTv2Zkexl4CCkVB74U3LqyUwegg==",
+          "nodeEngine": ">=24.18.0 <25",
+          "pnpmEngine": ">=11.17.0 <12",
+          "direct": true
+        }
+      ]
     },
     "required": {
-      "status": "pending-publication",
+      "status": "published",
       "distribution": "npm",
-      "nodeEngine": ">=24.18.0 <25 || >=26.10.0 <27",
+      "nodeEngine": "^24.18.0 || ^26.0.0",
       "pnpmEngine": ">=11.17.0 <12",
       "immutableVersionRequired": true,
       "immutableIntegrityRequired": true,
-      "version": null,
-      "integrity": null
+      "version": "1.7.2",
+      "integrity": "sha512-2wmq4g8rWgXQ2qBVY2Tb7HVP9LFsuBAUMcDhgCqixLA0RA9H3OrwXy7b7jK2gS6SggK9XCplNb03mVLR2EyzRg==",
+      "cohortId": "docs-2026-10-03-stable31"
     }
+  },
+  "managedQualification": {
+    "nodeEngine": ">=24.18.0 <25",
+    "node26Selected": false,
+    "node26Status": "candidate-unqualified",
+    "source": "@agent-teams/docs-protocol-agent-teams@0.3.2/assets/runtime-policy.v1.json",
+    "currentDesiredCohort": "docs-2026-09-11-stable20",
+    "currentObservedCohort": "docs-2026-09-11-stable20",
+    "centralRevision": "2b9bc7397b2548b933532b9861d0fcc2d54c1901",
+    "targetIntegration": "pending owning public generation-2 upgrade; desired31 proposal1203 is not merged"
+  },
+  "policyTools": [
+    {
+      "package": "semver",
+      "version": "7.8.5",
+      "nodeEngine": ">=10",
+      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="
+    },
+    {
+      "package": "yaml",
+      "version": "2.9.1",
+      "nodeEngine": ">=14.6",
+      "integrity": "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw=="
+    }
+  ],
+  "packageCompatibility": {
+    "mode": "package-compatibility",
+    "evidenceClass": "public-package-compatibility",
+    "managedQualification": false,
+    "manifest": "scripts/node26-public-packages/manifest.json",
+    "lockfile": "scripts/node26-public-packages/locked-dependencies.yaml",
+    "sourceFixture": "published five-coordinate stable31; consumer selection remains stable20",
+    "internalEdges": [
+      [
+        "@agent-teams/document-authoring",
+        "@agent-teams/repository-mutation"
+      ],
+      [
+        "@agent-teams/docs-protocol",
+        "@agent-teams/document-authoring"
+      ],
+      [
+        "@agent-teams/docs-protocol",
+        "@agent-teams/repository-mutation"
+      ],
+      [
+        "@agent-teams/docs-protocol-agent-teams",
+        "@agent-teams/docs-protocol"
+      ],
+      [
+        "@agent-teams/docs-protocol-agent-teams",
+        "@agent-teams/repository-mutation"
+      ],
+      [
+        "@agent-teams/engineering-foundation",
+        "@agent-teams/document-authoring"
+      ],
+      [
+        "@agent-teams/engineering-foundation",
+        "@agent-teams/repository-mutation"
+      ]
+    ],
+    "gate": "released portable Docs check on the fresh copied consumer; public SDK execution and exact managed26 denial"
   }
 }

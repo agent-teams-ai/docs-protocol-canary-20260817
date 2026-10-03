@@ -11,6 +11,8 @@ on:
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
+      - scripts/node26-public-packages/**
+      - scripts/node26-public-package-probe.mts
       - scripts/lib/node26-canary-policy.mjs
       - scripts/node-api-compatibility-probe.mjs
       - scripts/node26-canary-qualification.mjs
@@ -18,12 +20,12 @@ on:
   workflow_dispatch:
     inputs:
       run_node24_production:
-        description: Run the retained Node 24 production qualification
+        description: Run the retained Node24 candidate runner
         required: true
         type: boolean
         default: true
       run_node26_canary:
-        description: Run the isolated Node 26 canary qualification
+        description: Attempt managed Node26 candidate qualification (currently denied)
         required: true
         type: boolean
         default: true
@@ -45,7 +47,16 @@ jobs:
         with:
           node-version: 24.18.0
       - run: npm install --global corepack@0.36.0 --ignore-scripts
-      - run: node --test test/node26-canary-policy.test.mjs
+      - name: Real parser and admission regressions
+        shell: bash
+        run: |
+          policy_tools_root=$(mktemp -d "${{ runner.temp }}/node-policy-tools.XXXXXX")
+          trap 'rm -rf -- "$policy_tools_root"' EXIT
+          cp scripts/node26-public-packages/manifest.json "$policy_tools_root/package.json"
+          cp scripts/node26-public-packages/locked-dependencies.yaml "$policy_tools_root/pnpm-lock.yaml"
+          cp scripts/node26-public-packages/pnpm-workspace.yaml "$policy_tools_root/pnpm-workspace.yaml"
+          corepack pnpm --dir "$policy_tools_root" install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --package-import-method=copy --store-dir "$policy_tools_root/store"
+          NODE26_POLICY_TOOLS="$policy_tools_root" node --test test/node26-canary-policy.test.mjs
       - run: node scripts/node26-canary-qualification.mjs --mode production --work-root "${{ runner.temp }}/node24-production-${{ github.run_id }}-${{ github.run_attempt }}"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
@@ -68,12 +79,54 @@ jobs:
         with:
           node-version: 26.10.0
       - run: npm install --global corepack@0.36.0 --ignore-scripts
-      - run: node --test test/node26-canary-policy.test.mjs
+      - name: Real parser and admission regressions
+        shell: bash
+        run: |
+          policy_tools_root=$(mktemp -d "${{ runner.temp }}/node-policy-tools.XXXXXX")
+          trap 'rm -rf -- "$policy_tools_root"' EXIT
+          cp scripts/node26-public-packages/manifest.json "$policy_tools_root/package.json"
+          cp scripts/node26-public-packages/locked-dependencies.yaml "$policy_tools_root/pnpm-lock.yaml"
+          cp scripts/node26-public-packages/pnpm-workspace.yaml "$policy_tools_root/pnpm-workspace.yaml"
+          corepack pnpm --dir "$policy_tools_root" install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --package-import-method=copy --store-dir "$policy_tools_root/store"
+          NODE26_POLICY_TOOLS="$policy_tools_root" node --test test/node26-canary-policy.test.mjs
       - run: node scripts/node26-canary-qualification.mjs --mode canary --work-root "${{ runner.temp }}/node26-canary-${{ github.run_id }}-${{ github.run_attempt }}"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: node26-canary-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/node26-canary-${{ github.run_id }}-${{ github.run_attempt }}/evidence
+          retention-days: 14
+          if-no-files-found: warn
+
+  # Always executes for this workflow; published package support is separate
+  # from the optional, genuinely denied managed Node26 candidate attempt.
+  node26-package-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 26.10.0
+      - run: npm install --global corepack@0.36.0 --ignore-scripts
+      - name: Real parser and admission regressions
+        shell: bash
+        run: |
+          policy_tools_root=$(mktemp -d "${{ runner.temp }}/node-policy-tools.XXXXXX")
+          trap 'rm -rf -- "$policy_tools_root"' EXIT
+          cp scripts/node26-public-packages/manifest.json "$policy_tools_root/package.json"
+          cp scripts/node26-public-packages/locked-dependencies.yaml "$policy_tools_root/pnpm-lock.yaml"
+          cp scripts/node26-public-packages/pnpm-workspace.yaml "$policy_tools_root/pnpm-workspace.yaml"
+          corepack pnpm --dir "$policy_tools_root" install --frozen-lockfile --ignore-scripts --ignore-pnpmfile --engine-strict --strict-peer-dependencies --package-import-method=copy --store-dir "$policy_tools_root/store"
+          NODE26_POLICY_TOOLS="$policy_tools_root" node --test test/node26-canary-policy.test.mjs
+      - run: node scripts/node26-canary-qualification.mjs --mode package-compatibility --work-root "${{ runner.temp }}/node26-package-compatibility-${{ github.run_id }}-${{ github.run_attempt }}"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: node26-package-compatibility-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/node26-package-compatibility-${{ github.run_id }}-${{ github.run_attempt }}/evidence
           retention-days: 14
           if-no-files-found: warn

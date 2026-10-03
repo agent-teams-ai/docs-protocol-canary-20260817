@@ -1,8 +1,8 @@
 import {execFileSync} from 'node:child_process';
-import {mkdir, cp, lstat, readFile, realpath, rm, writeFile} from 'node:fs/promises';
+import {mkdir, cp, lstat, readFile, realpath, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
-import {assertCleanSandbox, assertFoundationArtifact, assertNoInstalledTree, assertRuntimeMode, candidateTreeDigest, runtimeModes} from './lib/node26-canary-policy.mjs';
+import {acquireDirectory, assertCleanSandbox, assertFoundationArtifact, assertNoInstalledTree, assertPublicationFixture, assertRuntimeMode, candidateTreeDigest, loadPolicyTools, ownsChild, ownsDirectory, removeOwnedChild, runtimeModes} from './lib/node26-canary-policy.mjs';
 
 function option(name, fallback) {
   const index = process.argv.indexOf(`--${name}`);
@@ -28,32 +28,12 @@ let ownedEvidence;
 let ownedSandbox;
 let ownedState;
 
-async function acquireDirectory(path) {
-  const current = await lstat(path);
-  if (!current.isDirectory()) throw new Error(`Qualification directory was replaced: ${path}`);
-  return {dev: current.dev, ino: current.ino};
-}
-
 async function stillOwnsRoot() {
-  if (!ownedRoot) return false;
-  try {
-    const current = await lstat(workRoot);
-    return current.isDirectory() && current.dev === ownedRoot.dev && current.ino === ownedRoot.ino;
-  } catch (error) {
-    if (error.code === 'ENOENT') return false;
-    throw error;
-  }
+  return ownsDirectory(workRoot, ownedRoot);
 }
 
 async function stillOwnsChild(path, owned) {
-  if (!owned || !await stillOwnsRoot()) return false;
-  try {
-    const current = await lstat(path);
-    return current.isDirectory() && current.dev === owned.dev && current.ino === owned.ino;
-  } catch (error) {
-    if (error.code === 'ENOENT') return false;
-    throw error;
-  }
+  return ownsChild(workRoot, ownedRoot, path, owned);
 }
 
 function run(label, binary, args, cwd = sandbox) {
@@ -132,33 +112,79 @@ try {
   if (contract.qualification.peerValidation !== 'pnpm peers check --lockfile-only') {
     throw new Error('Locked peer validation contract drifted');
   }
-  const foundationArtifact = assertFoundationArtifact(
-    contract,
-    JSON.parse(await readFile(join(sandbox, 'package.json'), 'utf8')),
-    await readFile(join(sandbox, 'pnpm-lock.yaml'), 'utf8'),
-    JSON.parse(await readFile(join(sandbox, 'architecture/foundation/docs-protocol-managed-state.json'), 'utf8')),
-    mode
-  );
   const corepack = process.env.COREPACK_BIN ?? join(dirname(process.execPath), 'corepack');
   const version = run('package-manager-version', corepack, ['pnpm', '--version']);
   if (version.stdout.trim() !== '11.18.0') throw new Error(`Expected pnpm 11.18.0, received ${version.stdout.trim()}`);
   run('api-probe', process.execPath, ['scripts/node-api-compatibility-probe.mjs']);
-  run('strict-install', corepack, [
-    'pnpm',
-    'install',
-    '--frozen-lockfile',
-    '--ignore-scripts',
-    '--ignore-pnpmfile',
-    '--engine-strict',
-    '--package-import-method=copy',
-    '--store-dir',
-    join(state, 'pnpm-store')
-  ]);
-  run('locked-peer-check', corepack, ['pnpm', 'peers', 'check', '--lockfile-only']);
-  run('docs-contract-gate', corepack, ['pnpm', 'docs:protocol:check']);
+  // This installation is a separate published-package fixture. It never
+  // substitutes its manifest/lock for the selected managed consumer's files.
+  const packages = join(state, 'public-packages');
+  await mkdir(packages);
+  const fixture = contract.packageCompatibility;
+  if (fixture.manifest !== 'scripts/node26-public-packages/manifest.json' ||
+      fixture.lockfile !== 'scripts/node26-public-packages/locked-dependencies.yaml') {
+    throw new Error('Publication fixture paths drifted');
+  }
+  await cp(join(sandbox, fixture.manifest), join(packages, 'package.json'));
+  await cp(join(sandbox, fixture.lockfile), join(packages, 'pnpm-lock.yaml'));
+  await cp(join(sandbox, 'scripts/node26-public-packages/pnpm-workspace.yaml'), join(packages, 'pnpm-workspace.yaml'));
+  const install = [
+    'pnpm', 'install', '--frozen-lockfile', '--ignore-scripts', '--ignore-pnpmfile',
+    '--engine-strict', '--strict-peer-dependencies', '--package-import-method=copy',
+    '--store-dir', join(state, 'pnpm-store')
+  ];
+  run('published-package-strict-install', corepack, install, packages);
+  run('published-package-locked-peer-check', corepack, ['pnpm', 'peers', 'check', '--lockfile-only'], packages);
+  const tools = loadPolicyTools(packages);
+  const runtime = {node: process.versions.node, pnpm: version.stdout.trim()};
+  const publishedPackages = assertPublicationFixture(contract,
+    JSON.parse(await readFile(join(packages, 'package.json'), 'utf8')),
+    await readFile(join(packages, 'pnpm-lock.yaml'), 'utf8'), runtime, tools);
+  const policyDocument = tools.parseDocument(await readFile(join(packages, 'pnpm-workspace.yaml'), 'utf8'),
+    {uniqueKeys: true, strict: true});
+  if (policyDocument.errors.length) throw new Error('Invalid publication fixture policy YAML');
+  const fixturePolicy = policyDocument.toJS({maxAliasCount: 0});
+  const ageExclusions = publishedPackages
+    .filter(coordinate => ['@agent-teams/engineering-foundation', '@agent-teams/docs-protocol-agent-teams'].includes(coordinate.package))
+    .map(coordinate => `${coordinate.package}@${coordinate.version}`).sort();
+  if (!fixturePolicy || Object.keys(fixturePolicy).join() !== 'minimumReleaseAgeExclude' ||
+      ageExclusions.length !== 2 || !Array.isArray(fixturePolicy.minimumReleaseAgeExclude) ||
+      JSON.stringify([...fixturePolicy.minimumReleaseAgeExclude].sort()) !== JSON.stringify(ageExclusions)) {
+    throw new Error('Publication fixture release-age exceptions must match only the qualified Foundation and adapter coordinates');
+  }
+  let foundationArtifact;
+  const selected = JSON.parse(await readFile(join(sandbox, 'architecture/foundation/docs-protocol-managed-state.json'), 'utf8'));
+  if (mode === 'package-compatibility') {
+    await cp(join(sandbox, 'scripts/node26-public-package-probe.mts'), join(packages, 'probe.mts'));
+    await cp(join(sandbox, 'scripts/node26-public-packages/tsconfig.json'), join(packages, 'tsconfig.json'));
+    const compiler = JSON.parse(await readFile(join(packages, 'node_modules/typescript/package.json'), 'utf8'));
+    const nodeTypes = JSON.parse(await readFile(join(packages, 'node_modules/@types/node/package.json'), 'utf8'));
+    if (compiler.version !== '7.0.2' || nodeTypes.version !== '26.6.4') {
+      throw new Error('Publication fixture typecheck dependency pins drifted');
+    }
+    run('public-probe-strict-typecheck', join(packages, 'node_modules/.bin/tsc'),
+      ['--noEmit', '--project', 'tsconfig.json'], packages);
+    // The managed reader requires a Git root; its read-only denial uses the
+    // original checkout. The portable check below uses the digested fresh copy.
+    run('public-sdk-and-managed26-denial', process.execPath, ['probe.mts', source], packages);
+    run('portable-docs-package-gate', corepack, ['pnpm', 'exec', 'agent-teams-docs', 'check',
+      '--consumer', sandbox, '--profile', 'architecture/foundation/docs-protocol.yaml'], packages);
+  } else {
+    foundationArtifact = assertFoundationArtifact(contract,
+      JSON.parse(await readFile(join(sandbox, 'package.json'), 'utf8')),
+      await readFile(join(sandbox, 'pnpm-lock.yaml'), 'utf8'), selected, mode, tools, runtime);
+    run('strict-install', corepack, install);
+    run('locked-peer-check', corepack, ['pnpm', 'peers', 'check', '--lockfile-only']);
+    run('docs-contract-gate', corepack, ['pnpm', 'docs:protocol:check']);
+  }
   const result = {
     outcome: 'passed',
     mode,
+    evidenceClass: mode === 'package-compatibility' ? 'public-package-compatibility' : 'managed-candidate-runner-supporting',
+    managedQualification: false,
+    selectedConsumerCohort: selected.cohortId,
+    publishedPackages,
+    publicationFixturePolicy: fixturePolicy,
     expectedNode: expected.version,
     actualNode: process.version,
     packageManager: version.stdout.trim(),
@@ -178,6 +204,8 @@ try {
   const result = {
     outcome: 'blocked',
     mode,
+    evidenceClass: mode === 'package-compatibility' ? 'public-package-compatibility' : 'managed-candidate-runner-supporting',
+    managedQualification: false,
     expectedNode: runtimeModes[mode]?.version ?? null,
     actualNode: process.version,
     source,
@@ -203,12 +231,8 @@ try {
   process.exitCode = 1;
 } finally {
   try {
-    if (await stillOwnsChild(sandbox, ownedSandbox)) {
-      await rm(sandbox, {recursive: true, force: true});
-    }
+    await removeOwnedChild(workRoot, ownedRoot, sandbox, ownedSandbox);
   } finally {
-    if (await stillOwnsChild(state, ownedState)) {
-      await rm(state, {recursive: true, force: true});
-    }
+    await removeOwnedChild(workRoot, ownedRoot, state, ownedState);
   }
 }

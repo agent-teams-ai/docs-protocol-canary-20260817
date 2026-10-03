@@ -1,20 +1,32 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
-import {cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile} from 'node:fs/promises';
+import {lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import test from 'node:test';
 import {
+  acquireDirectory,
   assertCleanSandbox,
   assertFoundationArtifact,
   assertNoInstalledTree,
   assertRuntimeMode,
-  candidateTreeDigest
+  assertPublicationFixture,
+  assertRange,
+  candidateTreeDigest,
+  loadPolicyTools,
+  ownsChild,
+  parseLockfile,
+  removeOwnedChild
 } from '../scripts/lib/node26-canary-policy.mjs';
+
+const tools = loadPolicyTools(process.env.NODE26_POLICY_TOOLS);
+const contract = JSON.parse(await readFile('architecture/foundation/docs-protocol-node26-qualification-v1.json', 'utf8'));
+
 
 test('retains Node 24 production and exact Node 26 canary runtimes', () => {
   assert.equal(assertRuntimeMode('24.18.0', 'production').major, 24);
   assert.equal(assertRuntimeMode('v26.10.0', 'canary').major, 26);
+  assert.equal(assertRuntimeMode('v26.10.0', 'package-compatibility').major, 26);
 });
 
 test('rejects the skipped Node 25 line and qualification version drift', () => {
@@ -49,52 +61,123 @@ test('runs the observable Node API compatibility probe', () => {
   assert.ok(result.apis.includes('fetch'));
 });
 
-test('cannot qualify while publication is pending or artifact identity drifts from lock and managed state', async () => {
-  const contract = JSON.parse(await readFile('architecture/foundation/docs-protocol-node26-qualification-v1.json', 'utf8'));
+// Synthetic admission inputs only, never generated consumer postimages or
+// publication/qualification evidence. SRIs and package ranges are the supplied
+// immutable releases; range parsing is performed by the real declared library.
+function publicationInput() {
+  const coordinates = [{...contract.foundationArtifact.required, package: '@agent-teams/engineering-foundation',
+    managedKey: 'engineeringFoundation', direct: true}, ...contract.foundationArtifact.publishedDependencies,
+    ...contract.policyTools.map(c => ({...c, direct: true}))];
+  const manifest = {engines: {node: '>=24.18.0 <25 || >=26.10.0 <27', pnpm: '>=11.17.0 <12'}, devDependencies: {}};
+  const lock = {lockfileVersion: '9.0', importers: {'.': {devDependencies: {}}}, packages: {}, snapshots: {}};
+  const managed = {cohortId: 'docs-2026-10-03-stable31', runtime: {node: '>=24.18.0 <25', pnpm: '>=11.17.0 <12'}, packages: {}};
+  for (const c of coordinates) {
+    if (c.direct) {
+      manifest.devDependencies[c.package] = c.version;
+      lock.importers['.'].devDependencies[c.package] = {specifier: c.version, version: c.version};
+    }
+    lock.packages[`${c.package}@${c.version}`] = {resolution: {integrity: c.integrity},
+      engines: {node: c.nodeEngine, ...(c.pnpmEngine ? {pnpm: c.pnpmEngine} : {})}};
+    lock.snapshots[`${c.package}@${c.version}`] = {dependencies: {}};
+    if (c.managedKey) managed.packages[c.managedKey] = {version: c.version, integrity: c.integrity};
+  }
+  for (const [from, to] of contract.packageCompatibility.internalEdges) {
+    const a = coordinates.find(c => c.package === from), b = coordinates.find(c => c.package === to);
+    lock.snapshots[`${from}@${a.version}`].dependencies[to] = b.version;
+  }
+  return {manifest, lock, managed};
+}
+
+test('retained real stable20 admits Node24 despite different consumer and package ranges', async () => {
   const manifest = JSON.parse(await readFile('package.json', 'utf8'));
   const lock = await readFile('pnpm-lock.yaml', 'utf8');
   const managed = JSON.parse(await readFile('architecture/foundation/docs-protocol-managed-state.json', 'utf8'));
-  assert.throws(() => assertFoundationArtifact(contract, manifest, lock, managed), /pending publication/);
-  assert.deepEqual(assertFoundationArtifact(contract, manifest, lock, managed, 'production'), {
-    package: '@agent-teams/engineering-foundation',
-    version: contract.foundationArtifact.current.version,
-    integrity: contract.foundationArtifact.current.integrity,
-    nodeEngine: contract.foundationArtifact.current.nodeEngine
-  });
-  const wrongRetained = structuredClone(contract);
-  wrongRetained.foundationArtifact.current.integrity = `sha512-${Buffer.alloc(64).toString('base64')}`;
-  assert.throws(() => assertFoundationArtifact(wrongRetained, manifest, lock, managed, 'production'), /Lockfile foundation integrity/);
+  assert.equal(assertFoundationArtifact(contract, manifest, lock, managed, 'production', tools).version, '1.2.0');
+  assert.throws(() => assertFoundationArtifact(contract, manifest, lock, managed, 'canary', tools), /Manifest foundation version/);
+});
 
-  // The retained artifact provides a real, already locked identity for this fixture.
-  const published = structuredClone(contract);
-  published.foundationArtifact.required = {
-    ...published.foundationArtifact.required,
-    status: 'published',
-    version: published.foundationArtifact.current.version,
-    integrity: published.foundationArtifact.current.integrity,
-    nodeEngine: published.foundationArtifact.current.nodeEngine
-  };
-  const matchingManifest = structuredClone(manifest);
-  matchingManifest.engines.node = published.foundationArtifact.current.nodeEngine;
-  assert.equal(assertFoundationArtifact(published, matchingManifest, lock, managed).version, '1.2.0');
+test('released stable31 package support admits runtime26 but preserves real managed24 restriction', () => {
+  const {manifest, lock, managed} = publicationInput();
+  const runtime = {node: '26.10.0', pnpm: '11.18.0'};
+  assert.equal(assertPublicationFixture(contract, manifest, JSON.stringify(lock), runtime, tools).length, 5);
+  const plainEngine = JSON.stringify(lock).replaceAll(
+    JSON.stringify({node: '^24.18.0 || ^26.0.0', pnpm: '>=11.17.0 <12'}),
+    "{node: ^24.18.0 || ^26.0.0, pnpm: '>=11.17.0 <12'}");
+  assert.equal(assertPublicationFixture(contract, manifest, plainEngine, runtime, tools).length, 5);
+  assert.equal(assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools).version, '1.7.2');
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'canary', tools), /Released managed check Node engine/);
+  managed.runtime.node = '>=26.0.0 <27';
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'canary', tools), /Released managed check Node engine/);
+});
 
-  const wrongVersion = structuredClone(published);
-  wrongVersion.foundationArtifact.required.version = '9.9.9';
-  assert.throws(() => assertFoundationArtifact(wrongVersion, matchingManifest, lock, managed), /Manifest foundation version/);
-  const wrongIntegrity = structuredClone(published);
-  wrongIntegrity.foundationArtifact.required.integrity = `sha512-${Buffer.alloc(64).toString('base64')}`;
-  assert.throws(() => assertFoundationArtifact(wrongIntegrity, matchingManifest, lock, managed), /Lockfile foundation integrity/);
-  const missingIntegrity = structuredClone(published);
-  missingIntegrity.foundationArtifact.required.integrity = null;
-  assert.throws(() => assertFoundationArtifact(missingIntegrity, matchingManifest, lock, managed), /pending publication/);
-  const wrongEngine = structuredClone(published);
-  wrongEngine.foundationArtifact.required.nodeEngine = '>=24.18.0 <25 || >=26.10.0 <27';
-  const matchingNewEngineManifest = structuredClone(matchingManifest);
-  matchingNewEngineManifest.engines.node = wrongEngine.foundationArtifact.required.nodeEngine;
-  assert.throws(() => assertFoundationArtifact(wrongEngine, matchingNewEngineManifest, lock, managed), /Lockfile foundation Node engine/);
-  const missingManaged = structuredClone(managed);
-  delete missingManaged.packages.engineeringFoundation;
-  assert.throws(() => assertFoundationArtifact(published, matchingManifest, lock, missingManaged), /Managed foundation version/);
+test('pending publication and missing managed identity are rejected before managed runtime admission', () => {
+  const f = publicationInput();
+  const pending = structuredClone(contract); pending.foundationArtifact.required.status = 'pending-publication';
+  assert.throws(() => assertFoundationArtifact(pending, f.manifest, JSON.stringify(f.lock), f.managed, 'canary', tools), /pending publication/);
+  const missing = structuredClone(contract); missing.foundationArtifact.required.integrity = null;
+  assert.throws(() => assertFoundationArtifact(missing, f.manifest, JSON.stringify(f.lock), f.managed, 'canary', tools), /pending publication/);
+  delete f.managed.packages.engineeringFoundation;
+  assert.throws(() => assertFoundationArtifact(contract, f.manifest, JSON.stringify(f.lock), f.managed, 'canary', tools), /Managed foundation version/);
+});
+
+test('real ranges handle caret, alternatives, hyphens, wildcards, bounds and prerelease rejection', () => {
+  for (const [version, range] of [['26.0.0', '^24.18.0 || ^26.0.0'], ['24.19.2', '24.18 - 24.21'],
+    ['26.10.0', '26.x'], ['11.18.0', '>=11.17.0 <12']]) assert.doesNotThrow(() => assertRange(version, range, 'engine', tools));
+  for (const [version, range] of [['24.17.9', '^24.18.0'], ['25.0.0', '^24.18.0 || ^26.0.0'],
+    ['26.9.0', '>=26.10.0 <27'], ['26.10.0-rc.1', '^26.0.0'], ['26.10.0', 'not a range'],
+    ['26.10.0', ''], ['11.18.0', '>=12']]) assert.throws(() => assertRange(version, range, 'engine', tools), /rejects runtime/);
+});
+
+test('consumer, locked package, and managed runtime ranges independently reject execution', () => {
+  const {manifest, lock, managed} = publicationInput();
+  manifest.engines.node = '^26.0.0';
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools), /Consumer Node engine/);
+  manifest.engines.node = '>=24.18.0 <25 || >=26.10.0 <27';
+  lock.packages['@agent-teams/engineering-foundation@1.7.2'].engines.node = '^26.0.0';
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools), /Lockfile.*Node engine/);
+  lock.packages['@agent-teams/engineering-foundation@1.7.2'].engines.node = '^24.18.0 || ^26.0.0';
+  managed.runtime.node = '^26.0.0';
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools), /Selected managed Node engine/);
+});
+
+test('peer-qualified root locators require matching snapshots and preserve exact SRI and versions', () => {
+  const {manifest, lock} = publicationInput();
+  const key = '@agent-teams/engineering-foundation@1.7.2';
+  const locator = '1.7.2(@types/node@24.13.3(peer@1.0.0))';
+  lock.importers['.'].devDependencies['@agent-teams/engineering-foundation'].version = locator;
+  lock.snapshots[`@agent-teams/engineering-foundation@${locator}`] = lock.snapshots[key];
+  delete lock.snapshots[key];
+  const admit = () => assertPublicationFixture(contract, manifest, JSON.stringify(lock), {node: '26.10.0', pnpm: '11.18.0'}, tools);
+  assert.equal(admit().find(c => c.package === '@agent-teams/engineering-foundation').version, '1.7.2');
+  for (const invalid of ['1.7.2()', '1.7.2(peer@1.0.0', '1.7.2(peer@1.0.0))', '1.7.2(peer @1)', '1.7.2(peer@1)tail', '1.7.3', 'file:artifact.tgz']) {
+    lock.importers['.'].devDependencies['@agent-teams/engineering-foundation'].version = invalid;
+    assert.throws(admit, /locator/);
+  }
+  lock.importers['.'].devDependencies['@agent-teams/engineering-foundation'].version = locator;
+  delete lock.snapshots[`@agent-teams/engineering-foundation@${locator}`];
+  assert.throws(admit, /root snapshot/);
+});
+
+test('identity, registry, direct roots, internal edges, and selected state cannot drift', () => {
+  for (const [change, expected] of [
+    [f => f.manifest.devDependencies['@agent-teams/engineering-foundation'] = '^1.7.2', /Manifest foundation version/],
+    [f => f.lock.importers['.'].devDependencies['@agent-teams/engineering-foundation'].specifier = '^1.7.2', /specifier/],
+    [f => f.lock.packages['@agent-teams/engineering-foundation@1.7.2'].resolution.integrity = `sha512-${Buffer.alloc(64).toString('base64')}`, /integrity/],
+    [f => f.lock.packages['@agent-teams/engineering-foundation@1.7.2'].resolution.tarball = 'file:untrusted.tgz', /Non-registry/],
+    [f => f.managed.packages.docsProtocol.integrity = 'wrong', /Managed.*integrity/],
+    [f => f.managed.cohortId = 'docs-2026-09-11-stable20', /Managed cohort/]
+  ]) {
+    const f = publicationInput(); change(f);
+    assert.throws(() => assertFoundationArtifact(contract, f.manifest, JSON.stringify(f.lock), f.managed, 'canary', tools), expected);
+  }
+  const f = publicationInput(); f.lock.snapshots['@agent-teams/docs-protocol@0.6.2'].dependencies['@agent-teams/repository-mutation'] = '0.2.0';
+  assert.throws(() => assertPublicationFixture(contract, f.manifest, JSON.stringify(f.lock), {node: '26.10.0', pnpm: '11.18.0'}, tools), /locator/);
+});
+
+test('real YAML rejects duplicate fields, malformed documents, and non-root importers', () => {
+  assert.throws(() => parseLockfile("lockfileVersion: '9.0'\nimporters: {.: {}}\nimporters: {.: {}}\n", tools), /Invalid lockfile YAML/);
+  assert.throws(() => parseLockfile('packages: [unterminated', tools), /Invalid lockfile YAML/);
+  assert.throws(() => parseLockfile("lockfileVersion: '9.0'\nimporters: {.: {}, child: {}}\n", tools), /exactly one root importer/);
 });
 
 test('exclusive work-root collision preserves existing consumer, state, and evidence bytes', async () => {
@@ -163,74 +246,55 @@ test('symlinked source and work-root parent are rejected before creating evidenc
   }
 });
 
-test('cleanup preserves independently replaced consumer and state directories or symlinks', async () => {
-  const fixture = await mkdtemp(join(tmpdir(), 'node26-child-cleanup-'));
+test('cleanup releases owned children and preserves foreign child, root, and evidence replacements', async () => {
+  const fixture = await mkdtemp(join(tmpdir(), 'node26-owned-cleanup-'));
   try {
-    const runner = await readFile(resolve('scripts/node26-canary-qualification.mjs'), 'utf8');
-    const seam = '  const expected = assertRuntimeMode(process.version, mode);';
-    assert.equal(runner.split(seam).length, 2);
-    await mkdir(join(fixture, 'scripts', 'lib'), {recursive: true});
-    await cp(resolve('scripts/lib/node26-canary-policy.mjs'), join(fixture, 'scripts', 'lib', 'node26-canary-policy.mjs'));
-    const source = join(fixture, 'source');
-    await mkdir(source);
-    for (const {name, replacement, targets} of [
-      {name: 'consumer-only', replacement: 'directory', targets: ['consumer']},
-      {name: 'state-only', replacement: 'directory', targets: ['state']},
-      {name: 'both-directories', replacement: 'directory', targets: ['consumer', 'state']},
-      {name: 'both-symlinks', replacement: 'symlink', targets: ['consumer', 'state']}
-    ]) {
-      const workRoot = join(fixture, `work-${name}`);
-      const injection = `  {
-    const fs = await import('node:fs/promises');
-    for (const target of ${JSON.stringify(targets)}) {
-      const original = join(workRoot, target);
-      await fs.rename(original, join(workRoot, 'former-' + target));
-      const foreign = join(${JSON.stringify(fixture)}, 'foreign-${name}-' + target);
-      await fs.mkdir(foreign);
-      await fs.writeFile(join(foreign, 'sentinel'), 'foreign-' + target);
-      if ('${replacement}' === 'symlink') await fs.symlink(foreign, original, 'dir');
-      else await fs.rename(foreign, original);
-    }
-    throw new Error('injected failure after foreign replacement');
-  }
-`;
-      const faultRunner = join(fixture, 'scripts', `fault-${name}.mjs`);
-      await writeFile(faultRunner, runner.replace(seam, injection + seam));
-      const result = spawnSync(process.execPath, [faultRunner, '--source', source, '--work-root', workRoot], {encoding: 'utf8'});
-      assert.equal(result.status, 1, result.stderr);
-      assert.equal(JSON.parse(result.stdout).message, 'injected failure after foreign replacement');
-      for (const target of ['consumer', 'state']) {
-        const path = join(workRoot, target);
-        if (targets.includes(target)) {
-          assert.equal((await lstat(path)).isSymbolicLink(), replacement === 'symlink');
-          assert.equal(await readFile(join(path, 'sentinel'), 'utf8'), `foreign-${target}`);
+    for (const replace of ['none', 'consumer', 'state', 'evidence', 'root', 'symlink']) {
+      const root = join(fixture, replace); await mkdir(root);
+      const rootOwner = await acquireDirectory(root);
+      const children = {};
+      for (const name of ['consumer', 'state', 'evidence']) {
+        const path = join(root, name); await mkdir(path);
+        children[name] = {path, owner: await acquireDirectory(path)};
+      }
+      const name = replace === 'symlink' ? 'consumer' : replace;
+      const target = replace === 'root' ? root : children[name]?.path;
+      if (target) {
+        await rename(target, target + '-former');
+        if (replace === 'symlink') {
+          const foreign = join(fixture, 'foreign'); await mkdir(foreign);
+          await writeFile(join(foreign, 'sentinel'), 'foreign'); await symlink(foreign, target, 'dir');
         } else {
-          await assert.rejects(lstat(path), {code: 'ENOENT'});
+          await mkdir(target); await writeFile(join(target, 'sentinel'), 'foreign');
         }
       }
+      for (const child of ['consumer', 'state']) {
+        const {path, owner} = children[child];
+        await removeOwnedChild(root, rootOwner, path, owner);
+        if (replace === 'root' || child === name) {
+          assert.equal(await readFile(join(target, 'sentinel'), 'utf8'), 'foreign');
+        } else await assert.rejects(lstat(path), {code: 'ENOENT'});
+      }
+      const evidence = children.evidence;
+      assert.equal(await ownsChild(root, rootOwner, evidence.path, evidence.owner), !['root', 'evidence'].includes(replace));
+      if (replace === 'evidence') assert.deepEqual(await readdir(evidence.path), ['sentinel']);
     }
-    for (const target of ['root', 'evidence']) {
-      const workRoot = join(fixture, `work-replaced-${target}`);
-      const path = target === 'root' ? workRoot : join(workRoot, 'evidence');
-      const injection = `  {
-    const fs = await import('node:fs/promises');
-    await fs.rename(${JSON.stringify(path)}, ${JSON.stringify(path + '-former')});
-    await fs.mkdir(${JSON.stringify(path)});
-    await fs.writeFile(join(${JSON.stringify(path)}, 'sentinel'), 'foreign-${target}');
-    throw new Error('injected failure after foreign replacement');
-  }
-`;
-      const faultRunner = join(fixture, 'scripts', `fault-replaced-${target}.mjs`);
-      await writeFile(faultRunner, runner.replace(seam, injection + seam));
-      const result = spawnSync(process.execPath, [faultRunner, '--source', source, '--work-root', workRoot], {encoding: 'utf8'});
-      assert.equal(result.status, 1, result.stderr);
-      assert.equal(JSON.parse(result.stdout).message, 'injected failure after foreign replacement');
-      assert.equal(await readFile(join(path, 'sentinel'), 'utf8'), `foreign-${target}`);
-      if (target === 'evidence') await assert.rejects(readFile(join(path, 'failure.json')), {code: 'ENOENT'});
-    }
-  } finally {
-    await rm(fixture, {recursive: true, force: true});
-  }
+  } finally { await rm(fixture, {recursive: true, force: true}); }
+});
+
+test('real runner failure cleans its fresh consumer and state while retaining failure evidence', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'node26-runner-cleanup-'));
+  try {
+    const source = join(root, 'source'); await mkdir(source);
+    const workRoot = join(root, 'work');
+    const result = spawnSync(process.execPath, [resolve('scripts/node26-canary-qualification.mjs'),
+      '--mode', 'unsupported', '--source', source, '--work-root', workRoot], {encoding: 'utf8'});
+    assert.equal(result.status, 1, result.stderr);
+    const failure = JSON.parse(await readFile(join(workRoot, 'evidence', 'failure.json'), 'utf8'));
+    assert.match(failure.message, /Unsupported qualification mode/);
+    assert.deepEqual(await readdir(workRoot), ['evidence']);
+    assert.deepEqual(await readdir(source), []);
+  } finally { await rm(root, {recursive: true, force: true}); }
 });
 
 test('rejects copied symlinks, including escapes, and binds candidate digest to file bytes', async () => {
