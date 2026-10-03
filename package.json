@@ -7,7 +7,7 @@
   "type": "module",
   "packageManager": "pnpm@11.18.0",
   "engines": {
-    "node": ">=24.18.0 <25",
+    "node": ">=24.18.0 <25 || >=26.10.0 <27",
     "pnpm": ">=11.17.0 <12"
   },
   "devDependencies": {
@@ -16,6 +16,9 @@
     "@agent-teams/docs-protocol-agent-teams": "0.2.7"
   },
   "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "qualification:node24": "node scripts/node26-canary-qualification.mjs --mode production",
+    "qualification:node26": "node scripts/node26-canary-qualification.mjs --mode canary",
     "docs:check": "agent-teams-docs check --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:doctor": "agent-teams-docs doctor --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:find": "agent-teams-docs find --consumer . --profile architecture/foundation/docs-protocol.yaml",
