@@ -6,7 +6,7 @@ import {dirname, resolve} from 'node:path';
 import {inspectFoundationPackage} from '@agent-teams/engineering-foundation';
 import {ConsumerIntegrationNodeError, readConsumerIntegrationInput} from '@agent-teams/docs-protocol-agent-teams';
 
-assert.equal(process.version, 'v26.10.0');
+assert.equal(process.version, 'v26.11.1');
 const consumerRootArgument = process.argv[2];
 if (consumerRootArgument === undefined || consumerRootArgument.length === 0) {
   throw new Error('Usage: node probe.mts <consumer-root>');

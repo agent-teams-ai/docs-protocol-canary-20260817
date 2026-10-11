@@ -12,18 +12,22 @@
   },
   "runtime": {
     "production": {
-      "version": "24.18.0",
+      "version": "26.11.1",
       "default": true
     },
+    "node24Compatibility": {
+      "version": "24.18.0"
+    },
     "canary": {
-      "version": "26.10.0"
+      "version": "26.11.1"
     },
     "skippedMajors": [
       25
     ],
     "cutover": {
-      "requiresNode26Lts": true,
-      "requiresOwnerAuthorization": true
+      "requiresNode26Lts": false,
+      "requiresOwnerAuthorization": true,
+      "ownerAuthorization": "2026-10-11 explicit Node26.11.1 default migration"
     }
   },
   "qualification": {
