@@ -23,16 +23,17 @@ const tools = loadPolicyTools(process.env.NODE26_POLICY_TOOLS);
 const contract = JSON.parse(await readFile('architecture/foundation/docs-protocol-node26-qualification-v1.json', 'utf8'));
 
 
-test('retains Node 24 production and exact Node 26 canary runtimes', () => {
-  assert.equal(assertRuntimeMode('24.18.0', 'production').major, 24);
-  assert.equal(assertRuntimeMode('v26.10.0', 'canary').major, 26);
-  assert.equal(assertRuntimeMode('v26.10.0', 'package-compatibility').major, 26);
+test('retains Node 24 compatibility and exact Node 26 default and canary runtimes', () => {
+  assert.equal(assertRuntimeMode('26.11.1', 'production').major, 26);
+  assert.equal(assertRuntimeMode('24.18.0', 'node24-compatibility').major, 24);
+  assert.equal(assertRuntimeMode('v26.11.1', 'canary').major, 26);
+  assert.equal(assertRuntimeMode('v26.11.1', 'package-compatibility').major, 26);
 });
 
 test('rejects the skipped Node 25 line and qualification version drift', () => {
-  assert.throws(() => assertRuntimeMode('25.0.0', 'canary'), /requires Node 26\.10\.0/);
-  assert.throws(() => assertRuntimeMode('24.17.0', 'production'), /requires Node 24\.18\.0/);
-  assert.throws(() => assertRuntimeMode('26.9.0', 'canary'), /requires Node 26\.10\.0/);
+  assert.throws(() => assertRuntimeMode('25.0.0', 'canary'), /requires Node 26\.11\.1/);
+  assert.throws(() => assertRuntimeMode('24.17.0', 'node24-compatibility'), /requires Node 24\.18\.0/);
+  assert.throws(() => assertRuntimeMode('26.9.0', 'canary'), /requires Node 26\.11\.1/);
 });
 
 test('rejects reused installations and Git metadata in qualification sandboxes', async () => {
@@ -89,10 +90,10 @@ function publicationInput() {
 }
 
 test('retained real stable20 admits Node24 despite different consumer and package ranges', async () => {
-  const manifest = JSON.parse(await readFile('package.json', 'utf8'));
-  const lock = await readFile('pnpm-lock.yaml', 'utf8');
+  const manifest = JSON.parse(await readFile('test/fixtures/stable20-retained/manifest.json', 'utf8'));
+  const lock = await readFile('test/fixtures/stable20-retained/locked-dependencies.yaml', 'utf8');
   const managed = JSON.parse(await readFile('architecture/foundation/docs-protocol-managed-state.json', 'utf8'));
-  assert.equal(assertFoundationArtifact(contract, manifest, lock, managed, 'production', tools).version, '1.2.0');
+  assert.equal(assertFoundationArtifact(contract, manifest, lock, managed, 'node24-compatibility', tools).version, '1.2.0');
   assert.throws(() => assertFoundationArtifact(contract, manifest, lock, managed, 'canary', tools), /Manifest foundation version/);
 });
 
@@ -104,7 +105,7 @@ test('released stable31 package support admits runtime26 but preserves real mana
     JSON.stringify({node: '^24.18.0 || ^26.0.0', pnpm: '>=11.17.0 <12'}),
     "{node: ^24.18.0 || ^26.0.0, pnpm: '>=11.17.0 <12'}");
   assert.equal(assertPublicationFixture(contract, manifest, plainEngine, runtime, tools).length, 5);
-  assert.equal(assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools).version, '1.7.2');
+  assert.equal(assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'node24-compatibility', tools).version, '1.7.2');
   assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'canary', tools), /Released managed check Node engine/);
   managed.runtime.node = '>=26.0.0 <27';
   assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'canary', tools), /Released managed check Node engine/);
@@ -131,13 +132,13 @@ test('real ranges handle caret, alternatives, hyphens, wildcards, bounds and pre
 test('consumer, locked package, and managed runtime ranges independently reject execution', () => {
   const {manifest, lock, managed} = publicationInput();
   manifest.engines.node = '^26.0.0';
-  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools), /Consumer Node engine/);
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'node24-compatibility', tools), /Consumer Node engine/);
   manifest.engines.node = '>=24.18.0 <25 || >=26.10.0 <27';
   lock.packages['@agent-teams/engineering-foundation@1.7.2'].engines.node = '^26.0.0';
-  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools), /Lockfile.*Node engine/);
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'node24-compatibility', tools), /Lockfile.*Node engine/);
   lock.packages['@agent-teams/engineering-foundation@1.7.2'].engines.node = '^24.18.0 || ^26.0.0';
   managed.runtime.node = '^26.0.0';
-  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'production', tools), /Selected managed Node engine/);
+  assert.throws(() => assertFoundationArtifact(contract, manifest, JSON.stringify(lock), managed, 'node24-compatibility', tools), /Selected managed Node engine/);
 });
 
 test('peer-qualified root locators require matching snapshots and preserve exact SRI and versions', () => {

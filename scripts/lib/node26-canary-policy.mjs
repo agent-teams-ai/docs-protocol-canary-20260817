@@ -4,9 +4,10 @@ import {createRequire} from 'node:module';
 import {join} from 'node:path';
 
 export const runtimeModes = Object.freeze({
-  production: Object.freeze({version: '24.18.0', major: 24}),
-  canary: Object.freeze({version: '26.10.0', major: 26}),
-  'package-compatibility': Object.freeze({version: '26.10.0', major: 26})
+  production: Object.freeze({version: '26.11.1', major: 26}),
+  'node24-compatibility': Object.freeze({version: '24.18.0', major: 24}),
+  canary: Object.freeze({version: '26.11.1', major: 26}),
+  'package-compatibility': Object.freeze({version: '26.11.1', major: 26})
 });
 
 export function assertRuntimeMode(version, mode) {
@@ -147,9 +148,9 @@ export function assertFoundationArtifact(contract, manifest, lockText, managed, 
       publication?.immutableVersionRequired !== true || publication?.immutableIntegrityRequired !== true) {
     throw new Error('Foundation artifact contract is incomplete');
   }
-  if (mode !== 'production' && mode !== 'canary') throw new Error(`Unsupported qualification mode: ${mode}`);
+  if (mode !== 'production' && mode !== 'node24-compatibility' && mode !== 'canary') throw new Error(`Unsupported qualification mode: ${mode}`);
   assertRuntimeMode(runtime.node, mode);
-  const required = mode === 'production' && managed.cohortId === artifact.current.cohortId ? artifact.current : publication;
+  const required = (mode === 'production' || mode === 'node24-compatibility') && managed.cohortId === artifact.current.cohortId ? artifact.current : publication;
   if ((required !== artifact.current && required.status !== 'published') || !required.version || !required.integrity ||
       !/^sha512-[A-Za-z0-9+/]+={0,2}$/.test(required.integrity)) {
     throw new Error('Foundation artifact identity is pending publication');
