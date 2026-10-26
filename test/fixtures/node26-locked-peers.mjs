@@ -7,7 +7,7 @@ import {mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 
-assert.equal(process.version, 'v26.10.0');
+assert.equal(process.version, 'v26.11.1');
 const pnpmCli = resolve(process.argv[2] ?? '');
 assert.ok(process.argv[2], 'Pass the pinned pnpm CLI path');
 const root = await mkdtemp(join(process.env.FIXTURE_BASE ?? tmpdir(), 'node26-locked-peers-'));

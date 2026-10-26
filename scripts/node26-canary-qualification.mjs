@@ -12,7 +12,7 @@ function option(name, fallback) {
   return value;
 }
 
-const mode = option('mode', 'canary');
+const mode = option('mode', 'production');
 const source = resolve(option('source', process.cwd()));
 const contractPath = resolve(source, option('contract', 'architecture/foundation/docs-protocol-node26-qualification-v1.json'));
 const workBase = process.env.RUNNER_TEMP ?? tmpdir();
@@ -105,15 +105,20 @@ try {
   const contract = JSON.parse(await readFile(join(sandbox, contractRelative), 'utf8'));
   if (contract.runtime.production.version !== runtimeModes.production.version) throw new Error('Production runtime contract drifted');
   if (contract.runtime.canary.version !== runtimeModes.canary.version) throw new Error('Canary runtime contract drifted');
+  if (contract.runtime.node24Compatibility.version !== runtimeModes['node24-compatibility'].version) throw new Error('Node24 compatibility runtime contract drifted');
   if (!contract.runtime.skippedMajors.includes(25)) throw new Error('Node 25 must remain skipped');
-  if (!contract.runtime.cutover.requiresNode26Lts || !contract.runtime.cutover.requiresOwnerAuthorization) {
+  if (!contract.runtime.cutover.requiresOwnerAuthorization ||
+      contract.runtime.cutover.ownerAuthorization !== '2026-10-11 explicit Node26.11.1 default migration') {
     throw new Error('Node 26 cutover gates must remain explicit');
   }
   if (contract.qualification.peerValidation !== 'pnpm peers check --lockfile-only') {
     throw new Error('Locked peer validation contract drifted');
   }
   const corepack = process.env.COREPACK_BIN ?? join(dirname(process.execPath), 'corepack');
-  const version = run('package-manager-version', corepack, ['pnpm', '--version']);
+  const corepackJs = process.env.COREPACK_JS;
+  const runPnpm = (label, args, cwd = sandbox) => run(label, corepackJs ? process.execPath : corepack,
+    corepackJs ? [corepackJs, ...args] : args, cwd);
+  const version = runPnpm('package-manager-version', ['pnpm', '--version']);
   if (version.stdout.trim() !== '11.18.0') throw new Error(`Expected pnpm 11.18.0, received ${version.stdout.trim()}`);
   run('api-probe', process.execPath, ['scripts/node-api-compatibility-probe.mjs']);
   // This installation is a separate published-package fixture. It never
@@ -133,8 +138,8 @@ try {
     '--engine-strict', '--strict-peer-dependencies', '--package-import-method=copy',
     '--store-dir', join(state, 'pnpm-store')
   ];
-  run('published-package-strict-install', corepack, install, packages);
-  run('published-package-locked-peer-check', corepack, ['pnpm', 'peers', 'check', '--lockfile-only'], packages);
+  runPnpm('published-package-strict-install', install, packages);
+  runPnpm('published-package-locked-peer-check', ['pnpm', 'peers', 'check', '--lockfile-only'], packages);
   const tools = loadPolicyTools(packages);
   const runtime = {node: process.versions.node, pnpm: version.stdout.trim()};
   const publishedPackages = assertPublicationFixture(contract,
@@ -167,15 +172,15 @@ try {
     // The managed reader requires a Git root; its read-only denial uses the
     // original checkout. The portable check below uses the digested fresh copy.
     run('public-sdk-and-managed26-denial', process.execPath, ['probe.mts', source], packages);
-    run('portable-docs-package-gate', corepack, ['pnpm', 'exec', 'agent-teams-docs', 'check',
+    runPnpm('portable-docs-package-gate', ['pnpm', 'exec', 'agent-teams-docs', 'check',
       '--consumer', sandbox, '--profile', 'architecture/foundation/docs-protocol.yaml'], packages);
   } else {
     foundationArtifact = assertFoundationArtifact(contract,
       JSON.parse(await readFile(join(sandbox, 'package.json'), 'utf8')),
       await readFile(join(sandbox, 'pnpm-lock.yaml'), 'utf8'), selected, mode, tools, runtime);
-    run('strict-install', corepack, install);
-    run('locked-peer-check', corepack, ['pnpm', 'peers', 'check', '--lockfile-only']);
-    run('docs-contract-gate', corepack, ['pnpm', 'docs:protocol:check']);
+    runPnpm('strict-install', install);
+    runPnpm('locked-peer-check', ['pnpm', 'peers', 'check', '--lockfile-only']);
+    runPnpm('docs-contract-gate', ['pnpm', 'docs:protocol:check']);
   }
   const result = {
     outcome: 'passed',
